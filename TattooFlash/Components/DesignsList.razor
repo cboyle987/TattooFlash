@@ -1,0 +1,20 @@
+﻿
+<MudGrid class="mt-4">
+    @if (Designs.Any())
+    {
+        foreach (var design in Designs)
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <DesignCard Design="design" />
+            </MudItem>
+        }
+    } else
+    {
+        foreach (var i in Enumerable.Range(0, 4))
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <SkeletonDesignCard />
+            </MudItem>
+        }
+    }
+</MudGrid>

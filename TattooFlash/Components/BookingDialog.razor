@@ -1,0 +1,17 @@
+<MudDialog Style="width: calc(100% - 24px); max-width: 600px; height: min(800px, calc(100dvh - 24px)); max-height: calc(100dvh - 24px); margin: 12px;" ContentClass="pa-4 d-flex flex-column">
+    <TitleContent>
+        @Design.Name
+    </TitleContent>
+    <DialogContent>
+        <MudImage Src="@Design.ImageUrl" Alt="@Design.Name" Class="rounded-lg" Style="display: block; width: 100%; height: 0; min-height: 80px; flex: 1 1 0; object-fit: contain;" />
+
+        <MudText Typo="Typo.body1" Class="mt-2 flex-shrink-0">Price: £@Design.Price</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1 flex-shrink-0">Click below to DM me on instagam. Please include a screenshot of this design in your message so that I know which design you're interested in.</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" StartIcon="@Icons.Custom.Brands.Instagram" Color="Color.Primary" href="@InstagramLink" Target="_blank">
+            Book Now
+        </MudButton>
+    </DialogActions>
+</MudDialog>
