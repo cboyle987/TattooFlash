@@ -1,0 +1,39 @@
+﻿@page "/management"
+
+<MudContainer>
+    <MudPaper Class="pa-4 my-4">
+        <MudGrid Spacing="3" Class="align-center">
+            <MudItem xs="4">
+                <MudImage ObjectFit="@ObjectFit.ScaleDown" Height="100" Width="150" Src="samples/Ozzy1.jpg" Alt="Ozzy" Elevation="25" Class="rounded-lg"/>
+            </MudItem>
+            <MudItem xs="4">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudText Typo="Typo.h5">Sample Design Title</MudText>
+                    <MudTooltip Text="@(SampleIsAvailable ? "Available" : "Not available")">
+                        <MudIcon Icon="@(SampleIsAvailable ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                                 Color="@(SampleIsAvailable ? Color.Success : Color.Default)"
+                                 Style="@(SampleIsAvailable ? null : "color: var(--mud-palette-text-secondary);")"
+                                 aria-label="@(SampleIsAvailable ? "Available" : "Not available")" />
+                    </MudTooltip>
+                </MudStack>
+            </MudItem>
+            <MudItem xs="4">
+                <MudStack Spacing="2" AlignItems="AlignItems.Stretch">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit">
+                        Edit Design
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">
+                        Delete Design
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Visibility">
+                        Toggle Availability
+                    </MudButton>
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private bool SampleIsAvailable = false;
+}

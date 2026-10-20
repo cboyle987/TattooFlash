@@ -71,7 +71,7 @@ namespace TattooFlash.Services
                     Theme = "Ozzy",
                     Price = 120,
                     ImageUrl = "/samples/ozzy2.jpg",
-                    IsAvailable= true
+                    IsAvailable= false
                 },
               };
         }

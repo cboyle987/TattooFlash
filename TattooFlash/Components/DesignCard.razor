@@ -1,5 +1,14 @@
 <MudCard Style="position: relative; overflow: hidden;">
-    <MudCardMedia Image="@Design.ImageUrl" Height="200" />
+    <div style="position: relative; overflow: hidden;">
+        <MudCardMedia Image="@Design.ImageUrl" Height="200" />
+        @if (!Design.IsAvailable)
+        {
+            <MudOverlay Visible="true" Absolute="true" LockScroll="false"
+                        Style="background-color: rgba(128, 128, 128, 0.55);">
+                <MudChip T="string" Variant="Variant.Filled" Color="Color.Dark">Not available</MudChip>
+            </MudOverlay>
+        }
+    </div>
     <MudCardContent>
         <MudText Typo="Typo.h5">@Design.Name</MudText>
         <MudText Typo="Typo.body2">Price: £@Design.Price</MudText>
@@ -7,11 +16,5 @@
     <MudCardActions>
         <MudButton Disabled=@(!Design.IsAvailable) Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenBookingDialog">Book Now</MudButton>
     </MudCardActions>
-    @if (!Design.IsAvailable)
-    {
-        <MudOverlay Visible="true" Absolute="true" LockScroll="false"
-                    Style="background-color: rgba(128, 128, 128, 0.55);">
-            <MudChip T="string" Variant="Variant.Filled" Color="Color.Dark">Not available</MudChip>
-        </MudOverlay>
-    }
+    
 </MudCard>
