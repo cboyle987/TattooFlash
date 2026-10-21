@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc.Razor.Internal;
 using MudBlazor;
 using TattooFlash.Models;
+using TattooFlash.Services;
 
 namespace TattooFlash.Components
 {
@@ -12,6 +13,11 @@ namespace TattooFlash.Components
         public DesignModel Design { get; set; }
         [Inject]
         public IDialogService DialogService { get; set; }
+
+        [Inject]
+        public IImageUrlService ImageUrlService { get; set; }
+
+        private string ImageUrl => ImageUrlService.GetImageUrl(Design.ImageName);
 
         private async Task OpenBookingDialog()
         {

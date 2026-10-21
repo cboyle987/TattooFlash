@@ -20,7 +20,6 @@ namespace TattooFlash.Components.Pages
         public async Task LoadDesigns()
         {
             IsLoading = true;
-            await Task.Delay(300);
             Designs = await DesignService.GetAllDesignsAsync();
             IsLoading = false;
         }

@@ -21,7 +21,7 @@
         </MudPaper>
         foreach (var design in Designs)
         {
-            <DesignManagementItem Design="design" OnDesignDeleted="LoadDesigns" />
+            <DesignManagementItem Design="design" OnDesignChanged="LoadDesigns" />
         }
     }
 </MudContainer>

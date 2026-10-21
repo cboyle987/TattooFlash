@@ -12,7 +12,6 @@ namespace TattooFlash.Components
 
         protected override async Task OnInitializedAsync()
         {
-            await Task.Delay(4000);
             Designs = await DesignService.GetAllDesignsAsync();
         }
     }

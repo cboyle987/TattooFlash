@@ -3,7 +3,7 @@
 <MudPaper Class="pa-4 my-4">
     <MudGrid Spacing="3" Class="align-center">
         <MudItem xs="4">
-            <MudImage ObjectFit="@ObjectFit.ScaleDown" Height="100" Width="150" Src="@Design.ImageUrl" Alt="Ozzy" Elevation="25" Class="rounded-lg" />
+            <MudImage ObjectFit="@ObjectFit.ScaleDown" Height="100" Width="150" Src="@ImageUrl" Alt="Ozzy" Elevation="25" Class="rounded-lg" />
         </MudItem>
         <MudItem xs="4">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
@@ -35,12 +35,15 @@
     [Parameter]
     public DesignModel Design { get; set; }
     [Parameter]
-    public EventCallback OnDesignDeleted { get; set; }
+    public EventCallback OnDesignChanged { get; set; }
     [Inject]
     public IDesignService DesignService { get; set; }
     [Inject]
     public IDialogService DialogService { get; set; }
+    [Inject]
+    public IImageUrlService imageUrlService { get; set; }
 
+    private string ImageUrl => imageUrlService.GetImageUrl(Design.ImageName);
 
     private void EditDesign()
     {
@@ -61,7 +64,7 @@
             var result = await DesignService.DeleteDesignAsync(Design.Id);
             if (result)
             {
-                await OnDesignDeleted.InvokeAsync();
+                await OnDesignChanged.InvokeAsync();
             }
         }
     }
@@ -69,5 +72,6 @@
     private async Task ToggleAvailability()
     {
         await DesignService.ToggleAvailabilityAsync(Design.Id);
+        await OnDesignChanged.InvokeAsync();
     }
 }

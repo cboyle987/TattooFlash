@@ -1,17 +1,31 @@
+using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using TattooFlash.Components;
+using TattooFlash.Data;
+using TattooFlash.Repositories;
 using TattooFlash.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var connectionString = builder.Configuration
+    .GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Missing DefaultConnection.");
+
 // Add MudBlazor services
 builder.Services.AddMudServices();
-builder.Services.AddScoped<IDesignService, MockDesignService>();
+
+// Register app services 
+builder.Services.AddScoped<IDesignRepository, DesignRepository>();
+builder.Services.AddScoped<IDesignService, DesignService>();
+builder.Services.AddScoped<IImageUrlService, ImageUrlService>();
 
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddDbContextFactory<AppDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
 var app = builder.Build();
 
