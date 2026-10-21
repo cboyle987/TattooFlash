@@ -1,0 +1,73 @@
+﻿@using TattooFlash.Models
+@using TattooFlash.Services
+<MudPaper Class="pa-4 my-4">
+    <MudGrid Spacing="3" Class="align-center">
+        <MudItem xs="4">
+            <MudImage ObjectFit="@ObjectFit.ScaleDown" Height="100" Width="150" Src="@Design.ImageUrl" Alt="Ozzy" Elevation="25" Class="rounded-lg" />
+        </MudItem>
+        <MudItem xs="4">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.h5">@(Design.Name)</MudText>
+                <MudTooltip Text="@(Design.IsAvailable ? "Available" : "Not available")">
+                    <MudIcon Icon="@(Design.IsAvailable ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                             Color="@(Design.IsAvailable ? Color.Success : Color.Default)"
+                             Style="@(Design.IsAvailable ? null : "color: var(--mud-palette-text-secondary);")"
+                             aria-label="@(Design.IsAvailable ? "Available" : "Not available")" />
+                </MudTooltip>
+            </MudStack>
+        </MudItem>
+        <MudItem xs="4">
+            <MudStack Spacing="2" AlignItems="AlignItems.Stretch">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="EditDesign">
+                    Edit Design
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteDesign">
+                    Delete Design
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Visibility" OnClick="ToggleAvailability">
+                    Toggle Availability
+                </MudButton>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+@code {
+    [Parameter]
+    public DesignModel Design { get; set; }
+    [Parameter]
+    public EventCallback OnDesignDeleted { get; set; }
+    [Inject]
+    public IDesignService DesignService { get; set; }
+    [Inject]
+    public IDialogService DialogService { get; set; }
+
+
+    private void EditDesign()
+    {
+        throw new NotImplementedException();
+    }
+
+    private async Task DeleteDesign()
+    {
+        var dialogParameters = new DialogParameters
+        {
+            { "Design", Design }
+        };
+        var confirmDialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Confirm Delete", dialogParameters);
+        var confirmation = await confirmDialog.Result;
+
+        if (!confirmation.Canceled)
+        {
+            var result = await DesignService.DeleteDesignAsync(Design.Id);
+            if (result)
+            {
+                await OnDesignDeleted.InvokeAsync();
+            }
+        }
+    }
+
+    private async Task ToggleAvailability()
+    {
+        await DesignService.ToggleAvailabilityAsync(Design.Id);
+    }
+}

@@ -113,5 +113,14 @@ namespace TattooFlash.Services
             Designs.Add(design);
             return Task.FromResult(design);
         }
+
+        public Task ToggleAvailabilityAsync(Guid id)
+        {
+            var design = Designs.FirstOrDefault(d => d.Id == id);
+            if(design == null)
+                throw new KeyNotFoundException("Design not found");
+            design.IsAvailable = !design.IsAvailable;
+            return Task.CompletedTask;
+        }
     }
 }

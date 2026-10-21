@@ -1,0 +1,20 @@
+<MudPaper Class="pa-4 my-4" aria-label="Loading design" aria-busy="true">
+    <MudGrid Spacing="3" Class="align-center">
+        <MudItem xs="4">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="100px" Width="150px" Class="rounded-lg" />
+        </MudItem>
+        <MudItem xs="4">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="60%" Height="40px" />
+                <MudSkeleton SkeletonType="SkeletonType.Circle" Width="24px" Height="24px" />
+            </MudStack>
+        </MudItem>
+        <MudItem xs="4">
+            <MudStack Spacing="2" AlignItems="AlignItems.Stretch">
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="36px" Class="rounded" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="36px" Class="rounded" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="36px" Class="rounded" />
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+</MudPaper>

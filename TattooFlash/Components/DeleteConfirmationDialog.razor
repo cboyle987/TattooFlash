@@ -1,0 +1,22 @@
+﻿@using TattooFlash.Models
+
+<MudDialog>
+    <DialogContent >
+        Are you sure you want to delete @Design.Name? This action cannot be undone.
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" Color="Color.Error" OnClick="Submit">Delete</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public DesignModel Design { get; set; }
+
+        private void Submit() => MudDialog.Close(DialogResult.Ok(true));
+
+    private void Cancel() => MudDialog.Cancel();
+}

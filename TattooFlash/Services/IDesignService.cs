@@ -13,5 +13,8 @@ namespace TattooFlash.Services
         public Task<DesignModel> UpdateDesignAsync(Guid id, DesignModel design);
 
         public Task<bool> DeleteDesignAsync(Guid id);
+
+        public Task ToggleAvailabilityAsync(Guid id);
+
     }
 }
