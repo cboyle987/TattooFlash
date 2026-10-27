@@ -17,7 +17,7 @@ builder.Services.AddMudServices();
 // Register app services 
 builder.Services.AddScoped<IDesignRepository, DesignRepository>();
 builder.Services.AddScoped<IDesignService, DesignService>();
-builder.Services.AddScoped<IImageUrlService, ImageUrlService>();
+builder.Services.AddScoped<IImageUrlService, LocalImageUrlService>();
 
 
 // Add services to the container.

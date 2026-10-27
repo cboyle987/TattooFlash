@@ -1,0 +1,26 @@
+﻿@page "/management/edit-design/{DesignId:guid}"
+
+<MudContainer>
+    <MudPaper>
+        @if (_isLoading)
+        {
+            <MudProgressCircular Indeterminate />
+        } else
+        {
+            <MudGrid>
+                <MudItem xs="12" class="d-flex justify-center">
+                    <MudText Typo="Typo.h3">Edit Design</MudText>
+                </MudItem>
+            </MudGrid>
+            @if (!string.IsNullOrEmpty(_saveError))
+            {
+                <MudAlert Severity="Severity.Error">@_saveError</MudAlert>
+            }
+
+            <DesignInput Design="Design" OnValidSubmit="UpdateDesign" />
+        }
+
+        
+    </MudPaper>
+
+</MudContainer>

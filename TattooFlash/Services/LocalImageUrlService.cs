@@ -5,10 +5,10 @@
     {
         string GetImageUrl(string imageName);
     }
-    public class ImageUrlService: IImageUrlService
+    public class LocalImageUrlService: IImageUrlService
     {
         private readonly IWebHostEnvironment _webHostEnvironment;
-        public ImageUrlService(IWebHostEnvironment webHostEnvironment)
+        public LocalImageUrlService(IWebHostEnvironment webHostEnvironment)
         {
             _webHostEnvironment = webHostEnvironment;
         }
@@ -21,7 +21,7 @@
             }
             else
             {
-                return "/samples/default-image.jpg"; // Return a default image if the specified image doesn't exist
+                return "/samples/default-image.png"; // Return a default image if the specified image doesn't exist
             }
         }
     }

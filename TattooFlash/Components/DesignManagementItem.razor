@@ -3,7 +3,7 @@
 <MudPaper Class="pa-4 my-4">
     <MudGrid Spacing="3" Class="align-center">
         <MudItem xs="12" md="4" Class="d-flex justify-center justify-md-start">
-            <MudImage ObjectFit="@ObjectFit.ScaleDown" Height="100" Width="150" Src="@ImageUrl" Alt="Ozzy" Elevation="25" Class="rounded-lg" />
+            <MudImage ObjectFit="@ObjectFit.ScaleDown" Height="100" Width="150" Src="@ImageUrl" Alt="@Design.Name" Elevation="25" Class="rounded-lg" />
         </MudItem>
         <MudItem xs="12" md="4" Class="d-flex justify-center justify-md-start">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
@@ -48,12 +48,14 @@
     public ISnackbar Snackbar { get; set; } = default!;
 
     private bool IsBusy { get; set; }
+    [Inject]
+    public NavigationManager NavigationManager { get; set; }
 
     private string ImageUrl => imageUrlService.GetImageUrl(Design.ImageName);
 
     private void EditDesign()
     {
-        throw new NotImplementedException();
+        NavigationManager.NavigateTo($"/management/edit-design/{Design.Id.ToString()}");
     }
 
     private async Task DeleteDesign()

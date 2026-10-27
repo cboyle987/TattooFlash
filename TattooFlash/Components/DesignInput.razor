@@ -1,0 +1,26 @@
+﻿<MudForm Class="pa-4" @ref="_form">
+    <MudGrid>
+        <MudItem xs="12">
+            <MudTextField Label="Design Name" @bind-Value="Design.Name" Required="true" RequiredError="Design name is required." />
+        </MudItem>
+        <MudItem xs="12">
+            <MudNumericField T="int" Min="0" Label="Price" @bind-Value="Design.Price" />
+        </MudItem>
+        <MudItem xs="12">
+            <MudTextField Label="Image Name" @bind-Value="Design.ImageName" Required="true" RequiredError="Image name is required." />
+        </MudItem>
+        <MudItem xs="12" class="d-flex justify-center">
+            <MudButton Disabled="@_isSaving" Variant="Variant.Filled" Color="Color.Success" OnClick="HandleSubmit">
+                @if (_isSaving)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Saving</MudText>
+                }
+                else
+                {
+                    <MudText>@SaveButtonText()</MudText>
+                }
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudForm>
