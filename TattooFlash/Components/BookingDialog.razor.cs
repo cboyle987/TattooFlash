@@ -8,13 +8,13 @@ namespace TattooFlash.Components
     public partial class BookingDialog
     {
         [Inject]
-        public IImageUrlService ImageUrlService { get; set; }
+        public IImageUrlService ImageUrlService { get; set; } = default!;
 
         [Inject]
         private IConfiguration Configuration { get; set; } = default!;
 
         [Parameter]
-        public DesignModel Design { get; set; }
+        public DesignModel Design { get; set; } = default!;
 
         private string InstagramUserName => Configuration["Booking:InstagramUserName"]
             ?? throw new InvalidOperationException("Missing Booking:InstagramUserName configuration.");
@@ -22,7 +22,7 @@ namespace TattooFlash.Components
         private string InstagramLink => $"https://ig.me/m/{InstagramUserName}";
 
         [CascadingParameter]
-        private IMudDialogInstance MudDialog { get; set; }
+        private IMudDialogInstance MudDialog { get; set; } = default!;
 
         private string ImageUrl => ImageUrlService.GetImageUrl(Design.ImageName);
 

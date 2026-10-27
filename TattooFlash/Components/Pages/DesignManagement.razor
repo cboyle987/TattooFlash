@@ -12,16 +12,14 @@
     }
     else
     {
-        <MudPaper>
-            <MudGrid Spacing="3">
-                <MudItem xs="12" md="6" Class="my-5">
-                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add">Add New Design</MudButton>
-                </MudItem>
-            </MudGrid>
+        <MudPaper Class="d-flex justify-center pa-6 my-4">
+            <MudButton Class="px-6 py-3" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add">Add New Design</MudButton>
         </MudPaper>
         foreach (var design in Designs)
         {
-            <DesignManagementItem Design="design" OnDesignChanged="LoadDesigns" />
+            <DesignManagementItem @key="design.Id" Design="design"
+                                  OnDesignDeleted="RemoveDesign"
+                                  OnAvailabilityChanged="UpdateAvailability" />
         }
     }
 </MudContainer>

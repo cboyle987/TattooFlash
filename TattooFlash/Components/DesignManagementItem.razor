@@ -2,12 +2,12 @@
 @using TattooFlash.Services
 <MudPaper Class="pa-4 my-4">
     <MudGrid Spacing="3" Class="align-center">
-        <MudItem xs="4">
+        <MudItem xs="12" md="4" Class="d-flex justify-center justify-md-start">
             <MudImage ObjectFit="@ObjectFit.ScaleDown" Height="100" Width="150" Src="@ImageUrl" Alt="Ozzy" Elevation="25" Class="rounded-lg" />
         </MudItem>
-        <MudItem xs="4">
+        <MudItem xs="12" md="4" Class="d-flex justify-center justify-md-start">
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                <MudText Typo="Typo.h5">@(Design.Name)</MudText>
+                <MudText Typo="Typo.h5" Class="text-center text-md-start">@(Design.Name)</MudText>
                 <MudTooltip Text="@(Design.IsAvailable ? "Available" : "Not available")">
                     <MudIcon Icon="@(Design.IsAvailable ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
                              Color="@(Design.IsAvailable ? Color.Success : Color.Default)"
@@ -16,15 +16,15 @@
                 </MudTooltip>
             </MudStack>
         </MudItem>
-        <MudItem xs="4">
-            <MudStack Spacing="2" AlignItems="AlignItems.Stretch">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="EditDesign">
+        <MudItem xs="12" md="4">
+            <MudStack Spacing="2" AlignItems="AlignItems.Center">
+                <MudButton Disabled="IsBusy" Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="EditDesign">
                     Edit Design
                 </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteDesign">
+                <MudButton Disabled="IsBusy" Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteDesign">
                     Delete Design
                 </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Visibility" OnClick="ToggleAvailability">
+                <MudButton Disabled="IsBusy" Size="Size.Small" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Visibility" OnClick="ToggleAvailability">
                     Toggle Availability
                 </MudButton>
             </MudStack>
@@ -33,15 +33,21 @@
 </MudPaper>
 @code {
     [Parameter]
-    public DesignModel Design { get; set; }
+    public DesignModel Design { get; set; } = default!;
     [Parameter]
-    public EventCallback OnDesignChanged { get; set; }
+    public EventCallback<Guid> OnDesignDeleted { get; set; }
+    [Parameter]
+    public EventCallback<Guid> OnAvailabilityChanged { get; set; }
     [Inject]
-    public IDesignService DesignService { get; set; }
+    public IDesignService DesignService { get; set; } = default!;
     [Inject]
-    public IDialogService DialogService { get; set; }
+    public IDialogService DialogService { get; set; } = default!;
     [Inject]
-    public IImageUrlService imageUrlService { get; set; }
+    public IImageUrlService imageUrlService { get; set; } = default!;
+    [Inject]
+    public ISnackbar Snackbar { get; set; } = default!;
+
+    private bool IsBusy { get; set; }
 
     private string ImageUrl => imageUrlService.GetImageUrl(Design.ImageName);
 
@@ -52,26 +58,55 @@
 
     private async Task DeleteDesign()
     {
-        var dialogParameters = new DialogParameters
-        {
-            { "Design", Design }
-        };
-        var confirmDialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Confirm Delete", dialogParameters);
-        var confirmation = await confirmDialog.Result;
+        if (IsBusy)
+            return;
 
-        if (!confirmation.Canceled)
+        IsBusy = true;
+        try
         {
-            var result = await DesignService.DeleteDesignAsync(Design.Id);
-            if (result)
+            var dialogParameters = new DialogParameters
             {
-                await OnDesignChanged.InvokeAsync();
+                { "Design", Design }
+            };
+            var confirmDialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Confirm Delete", dialogParameters);
+            var confirmation = await confirmDialog.Result;
+
+            if (confirmation is { Canceled: false })
+            {
+                var result = await DesignService.DeleteDesignAsync(Design.Id);
+                await OnDesignDeleted.InvokeAsync(Design.Id);
+                if (!result)
+                    Snackbar.Add("This design was already deleted.", Severity.Info);
             }
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Could not delete the design. Please try again.", Severity.Error);
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
     private async Task ToggleAvailability()
     {
-        await DesignService.ToggleAvailabilityAsync(Design.Id);
-        await OnDesignChanged.InvokeAsync();
+        if (IsBusy)
+            return;
+
+        IsBusy = true;
+        try
+        {
+            await DesignService.ToggleAvailabilityAsync(Design.Id);
+            await OnAvailabilityChanged.InvokeAsync(Design.Id);
+        }
+        catch (Exception)
+        {
+            Snackbar.Add("Could not change availability. Please try again.", Severity.Error);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 }

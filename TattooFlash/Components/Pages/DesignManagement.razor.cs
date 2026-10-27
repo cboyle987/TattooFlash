@@ -7,7 +7,7 @@ namespace TattooFlash.Components.Pages
     public partial class DesignManagement
     {
         [Inject]
-        public IDesignService DesignService { get; set; }
+        public IDesignService DesignService { get; set; } = default!;
 
         public List<DesignModel> Designs { get; set; } = new List<DesignModel>();
         public bool IsLoading { get; set; }
@@ -24,6 +24,16 @@ namespace TattooFlash.Components.Pages
             IsLoading = false;
         }
 
-       
+        private void RemoveDesign(Guid id)
+        {
+            Designs.RemoveAll(design => design.Id == id);
+        }
+
+        private void UpdateAvailability(Guid id)
+        {
+            var design = Designs.FirstOrDefault(design => design.Id == id);
+            if (design is not null)
+                design.IsAvailable = !design.IsAvailable;
+        }
     }
 }

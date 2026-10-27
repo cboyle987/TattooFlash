@@ -8,7 +8,7 @@ namespace TattooFlash.Components
     {
         public List<DesignModel>  Designs { get; set; }  = new List<DesignModel>();
         [Inject]
-        public IDesignService DesignService { get; set; }
+        public IDesignService DesignService { get; set; } = default!;
 
         protected override async Task OnInitializedAsync()
         {

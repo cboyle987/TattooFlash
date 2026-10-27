@@ -10,12 +10,12 @@ namespace TattooFlash.Components
     public partial class DesignCard
     {
         [Parameter]
-        public DesignModel Design { get; set; }
+        public DesignModel Design { get; set; } = default!;
         [Inject]
-        public IDialogService DialogService { get; set; }
+        public IDialogService DialogService { get; set; } = default!;
 
         [Inject]
-        public IImageUrlService ImageUrlService { get; set; }
+        public IImageUrlService ImageUrlService { get; set; } = default!;
 
         private string ImageUrl => ImageUrlService.GetImageUrl(Design.ImageName);
 
