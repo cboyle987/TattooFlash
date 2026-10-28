@@ -7,7 +7,8 @@
             <MudNumericField T="int" Min="0" Label="Price" @bind-Value="Design.Price" />
         </MudItem>
         <MudItem xs="12">
-            <MudTextField Label="Image Name" @bind-Value="Design.ImageName" Required="true" RequiredError="Image name is required." />
+            <MudFileUpload T="IBrowserFile" @bind-Files="_selectedImage" Accept="image/jpeg,image/png,image/webp" Disabled="_isSaving" Required="string.IsNullOrWhiteSpace(Design.ImageName)" RequiredError="Please select an image"> </MudFileUpload>
+           
         </MudItem>
         <MudItem xs="12" class="d-flex justify-center">
             <MudButton Disabled="@_isSaving" Variant="Variant.Filled" Color="Color.Success" OnClick="HandleSubmit">

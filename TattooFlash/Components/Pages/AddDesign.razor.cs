@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.AspNetCore.Mvc.Razor.Internal;
 using MudBlazor;
 using TattooFlash.Models;
 using TattooFlash.Services;
@@ -27,11 +29,25 @@ namespace TattooFlash.Components.Pages
             return base.OnInitializedAsync();
         }
 
-        private async Task CreateDesign()
+        private async Task CreateDesign(DesignSumbission submission)
         {
             _saveError = String.Empty;
             try {
-                await DesignService.CreateDesignAsync(NewDesign);
+                if(submission.SelectedImage == null)
+                {
+                    _saveError = "Unable to read selected Image.";
+                    return;
+                }
+
+                await using var input = submission.SelectedImage.OpenReadStream(
+    maxAllowedSize: 10 * 1024 * 1024);
+
+                using var buffer = new MemoryStream();
+                await input.CopyToAsync(buffer);
+                buffer.Position = 0;
+
+
+                await DesignService.CreateDesignAsync(submission.Design, buffer);
                 NavigationManager.NavigateTo("/management");
 
             } catch (Exception ex)

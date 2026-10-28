@@ -1,9 +1,17 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using MudBlazor;
+using System.ComponentModel.DataAnnotations;
 using TattooFlash.Models;
 
 namespace TattooFlash.Components
 {
+
+    public record DesignSumbission()
+    {
+        public required DesignModel Design { get; init; }
+        public IBrowserFile? SelectedImage { get; init; }
+    }
     public partial class DesignInput
     {
         [Parameter, EditorRequired]
@@ -11,14 +19,16 @@ namespace TattooFlash.Components
         [Inject]
         public ILogger<DesignInput> Logger { get; set; } = default!;
 
-        private MudForm _form;
+        private IBrowserFile? _selectedImage;
+
+        private MudForm? _form;
 
         private bool _isSaving = false;
 
         private string SaveButtonText() => Design.Id == Guid.Empty ? "Create" : "Update";
 
         [Parameter]
-        public EventCallback<DesignModel> OnValidSubmit { get; set; }
+        public EventCallback<DesignSumbission> OnValidSubmit { get; set; }
 
         private async Task HandleSubmit()
         {
@@ -38,7 +48,7 @@ namespace TattooFlash.Components
                 }
 
 
-                await OnValidSubmit.InvokeAsync(Design);
+                await OnValidSubmit.InvokeAsync(new DesignSumbission() { Design = Design, SelectedImage = _selectedImage });
             }
             catch (Exception ex)
             {

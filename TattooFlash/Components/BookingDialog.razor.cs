@@ -8,7 +8,7 @@ namespace TattooFlash.Components
     public partial class BookingDialog
     {
         [Inject]
-        public IImageUrlService ImageUrlService { get; set; } = default!;
+        public IImageService ImageUrlService { get; set; } = default!;
 
         [Inject]
         private IConfiguration Configuration { get; set; } = default!;

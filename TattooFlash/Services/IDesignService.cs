@@ -1,4 +1,5 @@
-﻿using TattooFlash.Models;
+﻿using TattooFlash.Components;
+using TattooFlash.Models;
 
 namespace TattooFlash.Services
 {
@@ -8,7 +9,7 @@ namespace TattooFlash.Services
 
         public Task<DesignModel?> GetDesignByIdAsync(Guid id);
 
-        public Task<DesignModel> CreateDesignAsync(DesignModel design);
+        public Task<DesignModel> CreateDesignAsync(DesignModel submission, Stream imageStream);
 
         public Task<DesignModel> UpdateDesignAsync(Guid id, DesignModel design);
 

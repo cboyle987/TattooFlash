@@ -43,13 +43,13 @@
     [Inject]
     public IDialogService DialogService { get; set; } = default!;
     [Inject]
-    public IImageUrlService imageUrlService { get; set; } = default!;
+    public IImageService imageUrlService { get; set; } = default!;
     [Inject]
     public ISnackbar Snackbar { get; set; } = default!;
 
     private bool IsBusy { get; set; }
     [Inject]
-    public NavigationManager NavigationManager { get; set; }
+    public NavigationManager NavigationManager { get; set; } = default!;
 
     private string ImageUrl => imageUrlService.GetImageUrl(Design.ImageName);
 

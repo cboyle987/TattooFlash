@@ -15,7 +15,7 @@ namespace TattooFlash.Components
         public IDialogService DialogService { get; set; } = default!;
 
         [Inject]
-        public IImageUrlService ImageUrlService { get; set; } = default!;
+        public IImageService ImageUrlService { get; set; } = default!;
 
         private string ImageUrl => ImageUrlService.GetImageUrl(Design.ImageName);
 

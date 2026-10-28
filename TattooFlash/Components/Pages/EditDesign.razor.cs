@@ -45,6 +45,11 @@ namespace TattooFlash.Components.Pages
             _saveError = String.Empty;
             try
             {
+                if(Design is null)
+                {
+                    _saveError = "Design is null. Cannot save.";
+                    return;
+                };
                 await DesignService.UpdateDesignAsync(DesignId, Design);
                 NavigationManager.NavigateTo("/management");
 
