@@ -1,4 +1,5 @@
 using SkiaSharp;
+using TattooFlash.Web.Enums;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
 
@@ -13,89 +14,129 @@ namespace TattooFlash.Web.Services
             SKEncodedImageFormat.Webp
         };
 
-
-        public ProcessedImage ProcessImage(Stream imageData)
+        public ImageProcessingResult ProcessImage(Stream imageData)
         {
-            using var codec = SKCodec.Create(imageData);
-
-            if (codec == null)
+            using var codec = CreateCodec(imageData);
+            if(codec == null)
             {
-                throw new NotSupportedException($"The image format for the provided data is not supported or the data is not a valid image.");
+                return ImageProcessingResult.Failure(ImageProcessingError.InvalidImage);
             }
 
+            var validationError = ValidateImage(codec);
+
+            if(validationError != null)
+            {
+                return ImageProcessingResult.Failure((ImageProcessingError)validationError);
+            }
+
+            using var bitmap = DecodeImage(codec);
+            using var orientatedBitmap = ApplyOrientation(bitmap, codec.EncodedOrigin);
+            using var finalBitmap = ResizeImage(orientatedBitmap);
+
+            var image = EncodeWebp(finalBitmap);
+            return ImageProcessingResult.Success(image);
+        }
+
+        private static SKCodec? CreateCodec(Stream imageData)
+        {
+            return SKCodec.Create(imageData);
+        }
+
+        private ImageProcessingError? ValidateImage(SKCodec codec)
+        {
             if (!_supportedFormats.Contains(codec.EncodedFormat))
             {
-                throw new NotSupportedException($"The image format {codec.EncodedFormat} is not supported.");
+                return ImageProcessingError.UnsupportedFormat;
             }
-            ;
-
 
             var info = codec.Info;
             if (info.Width <= 0 || info.Height <= 0)
             {
-                throw new NotSupportedException($"The image dimensions are invalid: {info.Width}x{info.Height}.");
+                return ImageProcessingError.InvalidImage;
             }
 
             if (info.Width > 8000 || info.Height > 8000)
             {
-                throw new NotSupportedException($"The image dimensions {info.Width}x{info.Height} exceed the maximum allowed size of 8000x8000 pixels.");
+                return ImageProcessingError.DimensionsExceeded;
             }
+
             var totalPixels = (long)info.Width * info.Height;
             if (totalPixels > 25_000_000)
             {
-                throw new NotSupportedException($"The image has {totalPixels} pixels, which exceeds the maximum allowed size of 25,000,000 pixels.");
+                return ImageProcessingError.PixelLimitExceeded;
             }
 
-            using var bitmap = new SKBitmap(info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+            return null;
 
-            var result = codec.GetPixels(bitmap.Info, bitmap.GetPixels());
+        }
 
-            if (result != SKCodecResult.Success)
+        private static SKBitmap DecodeImage(SKCodec codec)
+        {
+            var info = codec.Info;
+            var bitmap = new SKBitmap(info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+            try
             {
-                throw new NotSupportedException($"Failed to decode the image. Codec result: {result}");
+                var result = codec.GetPixels(bitmap.Info, bitmap.GetPixels());
+                if (result != SKCodecResult.Success)
+                {
+                    throw new NotSupportedException($"Failed to decode the image. Codec result: {result}");
+                }
+
+                return bitmap;
             }
-
-            using var orientatedBitmap = ApplyOrientation(bitmap, codec.EncodedOrigin);
-
-            var scale = Math.Min(1.0, 1800.0 / Math.Max(orientatedBitmap.Width, orientatedBitmap.Height));
-
-
-            var scaledWidth = (int)(Math.Max(orientatedBitmap.Width * scale, 1));
-            var scaledHeight = (int)(Math.Max(orientatedBitmap.Height * scale, 1));
-
-            using var finalBitmap = new SKBitmap(scaledWidth, scaledHeight, orientatedBitmap.ColorType, orientatedBitmap.AlphaType);
-
-            using (var canvas = new SKCanvas(finalBitmap))
+            catch
             {
+                bitmap.Dispose();
+                throw;
+            }
+        }
+
+        private static SKBitmap ResizeImage(SKBitmap source)
+        {
+            var scale = Math.Min(1.0, 1800.0 / Math.Max(source.Width, source.Height));
+            var scaledWidth = (int)Math.Max(source.Width * scale, 1);
+            var scaledHeight = (int)Math.Max(source.Height * scale, 1);
+            var result = new SKBitmap(scaledWidth, scaledHeight, source.ColorType, source.AlphaType);
+            try
+            {
+                using var canvas = new SKCanvas(result);
                 canvas.Clear(SKColors.Transparent);
                 var destRect = new SKRect(0, 0, scaledWidth, scaledHeight);
-                canvas.DrawBitmap(orientatedBitmap, destRect, new SKSamplingOptions(SKFilterMode.Linear), null);
-
+                canvas.DrawBitmap(source, destRect, new SKSamplingOptions(SKFilterMode.Linear), null);
+                return result;
             }
+            catch
+            {
+                result.Dispose();
+                throw;
+            }
+        }
 
+        private static ProcessedImage EncodeWebp(SKBitmap bitmap)
+        {
             var options = new SKWebpEncoderOptions(SKWebpEncoderCompression.Lossless, 75);
-            using var pixelView = finalBitmap.PeekPixels();
+            using var pixelView = bitmap.PeekPixels();
             var imageStream = new MemoryStream();
             try
             {
-                var encodeResult = pixelView.Encode(imageStream, options);
-                if (encodeResult == false)
+                if (!pixelView.Encode(imageStream, options))
                 {
-                    throw new NotSupportedException($"Failed to encode the image to WebP format.");
+                    throw new NotSupportedException("Failed to encode the image to WebP format.");
+                }
+
+                imageStream.Seek(0, SeekOrigin.Begin);
+                return new ProcessedImage
+                {
+                    Content = imageStream,
+                    ContentType = "image/webp",
+                    Extension = ".webp"
                 };
-            imageStream.Seek(0, SeekOrigin.Begin);
-            } catch
+            }
+            catch
             {
                 imageStream.Dispose();
                 throw;
             }
-
-            return new ProcessedImage
-            {
-                Content = imageStream,
-                ContentType = "image/webp",
-                Extension = ".webp"
-            };
         }
 
         private static SKBitmap ApplyOrientation(SKBitmap source, SKEncodedOrigin origin)

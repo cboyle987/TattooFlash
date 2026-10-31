@@ -7,8 +7,13 @@ namespace TattooFlash.Web.Interfaces
     {
         /// <summary>Decodes a JPEG, PNG, or WebP image, applies its orientation, and encodes it as WebP with a maximum dimension of 1800 pixels without upscaling.</summary>
         /// <param name="imageData">The source image data to decode.</param>
-        /// <returns>The encoded image and its content type and extension. The caller must dispose the returned content stream.</returns>
-        /// <exception cref="NotSupportedException">The image is invalid, unsupported, exceeds 8000 pixels in either dimension or 25 million total pixels, or cannot be decoded or encoded.</exception>
-        ProcessedImage ProcessImage(Stream imageData);
+        /// <returns>
+        /// A successful result containing the encoded image, content type and extension, or a failure
+        /// result when the data is unrecognisable, the format is unsupported, dimensions are invalid,
+        /// either dimension exceeds 8000 pixels, or the image exceeds 25 million pixels.
+        /// On success, the caller must dispose <see cref="ProcessedImage.Content"/> on the result's image.
+        /// </returns>
+        /// <exception cref="NotSupportedException">The recognised image cannot be decoded or the processed image cannot be encoded as WebP.</exception>
+        ImageProcessingResult ProcessImage(Stream imageData);
     }
 }

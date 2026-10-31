@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using TattooFlash.Web.Helpers;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
 
@@ -59,7 +60,14 @@ namespace TattooFlash.Web.Components.Pages.Management
                     using var buffer = new MemoryStream();
                     await input.CopyToAsync(buffer);
                     buffer.Position = 0;
-                    await DesignService.UpdateDesignAsync(DesignId, submission.Design, buffer);
+                    var result = await DesignService.UpdateDesignAsync(DesignId, submission.Design, buffer);
+                    if (!result.IsSuccess)
+                    {
+                        var error = result.ImageError
+                            ?? throw new InvalidOperationException("Design save failed without an image error code.");
+                        _saveError = ImageSaveErrorHelper.GetImageSaveErrorMessage(error);
+                        return;
+                    }
 
                 } else
                 {

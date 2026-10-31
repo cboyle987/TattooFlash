@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc.Razor.Internal;
 using MudBlazor;
+using TattooFlash.Web.Helpers;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
 
@@ -47,7 +48,15 @@ namespace TattooFlash.Web.Components.Pages.Management
                 buffer.Position = 0;
 
 
-                await DesignService.CreateDesignAsync(submission.Design, buffer);
+                var result = await DesignService.CreateDesignAsync(submission.Design, buffer);
+                if (!result.IsSuccess)
+                {
+                    var error = result.ImageError
+                        ?? throw new InvalidOperationException("Design save failed without an image error code.");
+                    _saveError = ImageSaveErrorHelper.GetImageSaveErrorMessage(error);
+                    return;
+                }
+
                 NavigationManager.NavigateTo("/management");
 
             } catch (Exception ex)

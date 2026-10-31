@@ -75,7 +75,17 @@ and access to PostgreSQL. Use .NET user secrets or environment variables for cre
 - Build after changing application code.
 - Explain how to verify a change and why the suggested checks matter. Guide the
   owner through writing tests when they add value, following the hint-first approach.
-- No automated test project currently exists. For behaviour changes, perform the
+- Service unit tests live in `TattooFlash.UnitTest/Services/` and use xUnit and Moq.
+  Blazor component tests live in `TattooFlash.UnitTest/Components/` and use bUnit.
+  Create a fresh `ComponentTestContext` per test with `await using`, register mocks
+  before rendering, and use `RenderWithProviders<TComponent>` for MudBlazor providers.
+  See `TattooFlash.UnitTest/Components/README.md` for authentication and JS interop setup.
+  Repository tests live in `TattooFlash.UnitTest/Repositories/` and use isolated
+  in-memory SQLite databases with a mocked context factory. These exercise real
+  relational queries but do not verify PostgreSQL-specific behaviour.
+  Run `dotnet test TattooFlash.slnx`. Tests use Arrange, Act, Assert and require no
+  database or Cloudflare credentials.
+- For behaviour changes, perform the
   relevant manual checks when the application and database are available.
 - For UI changes, check the affected page, loading and error states, and mobile layout.
 - Report what was verified and any checks blocked by missing configuration or tooling.

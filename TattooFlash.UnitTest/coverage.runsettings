@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Include>[TattooFlash.Web]*</Include>
+          <IncludeTestAssembly>false</IncludeTestAssembly>
+          <Exclude>[TattooFlash.UnitTest]*,[TattooFlash.Web]TattooFlash.Web.Migrations.*</Exclude>
+          <ExcludeByFile>**/Migrations/**/*.cs,**/obj/**/*.cs,**/*.g.cs,**/*.generated.cs</ExcludeByFile>
+          <!-- Keep CompilerGeneratedAttribute included: async methods and iterators contain application logic. -->
+          <ExcludeByAttribute>GeneratedCodeAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
