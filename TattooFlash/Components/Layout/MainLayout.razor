@@ -1,15 +1,32 @@
-﻿@inherits LayoutComponentBase
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inherits LayoutComponentBase
 
 <MudThemeProvider Theme="@_theme" IsDarkMode="_isDarkMode" />
 <MudDialogProvider   />
 <MudLayout>
-    <MudAppBar Elevation="1">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-        <MudText Typo="Typo.h5" Class="ml-3">Tattoo Flash</MudText>
-    </MudAppBar>
-    <MudDrawer id="nav-drawer" @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
-        <NavMenu />
-    </MudDrawer>
+    
+
+    <AuthorizeView>
+        <Authorized>
+            <MudAppBar Elevation="1">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+                <MudText Typo="Typo.h5" Class="ml-3">Tattoo Flash</MudText>
+                <MudSpacer />
+                <MudButton StartIcon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Href="/account/logout">Logout</MudButton>
+            </MudAppBar>
+            <MudDrawer id="nav-drawer" @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+                <NavMenu />
+            </MudDrawer>
+        </Authorized>
+        <NotAuthorized>
+            <MudAppBar>
+                <MudText Typo="Typo.h5" Class="ml-3">Tattoo Flash</MudText>
+                <MudSpacer />
+                <MudButton StartIcon="@Icons.Material.Filled.Login" Color="Color.Inherit" Href="/account/login">Login</MudButton>
+            </MudAppBar>
+        </NotAuthorized>
+    </AuthorizeView>
+    
     <MudMainContent >
         <div class="pa-4">
             @Body

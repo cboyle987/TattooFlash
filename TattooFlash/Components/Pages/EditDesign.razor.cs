@@ -40,17 +40,32 @@ namespace TattooFlash.Components.Pages
             }
         }
 
-        public async Task UpdateDesign()
+        public async Task UpdateDesign(DesignSumbission submission)
         {
             _saveError = String.Empty;
             try
             {
-                if(Design is null)
+                if(submission is null || submission.Design is null)
                 {
                     _saveError = "Design is null. Cannot save.";
                     return;
                 };
-                await DesignService.UpdateDesignAsync(DesignId, Design);
+
+                if (submission.SelectedImage != null)
+                {
+                    await using var input = submission.SelectedImage.OpenReadStream(
+    maxAllowedSize: 10 * 1024 * 1024);
+
+                    using var buffer = new MemoryStream();
+                    await input.CopyToAsync(buffer);
+                    buffer.Position = 0;
+                    await DesignService.UpdateDesignAsync(DesignId, submission.Design, buffer);
+
+                } else
+                {
+                    await DesignService.UpdateDesignAsync(DesignId, submission.Design, null);
+
+                }
                 NavigationManager.NavigateTo("/management");
 
             }

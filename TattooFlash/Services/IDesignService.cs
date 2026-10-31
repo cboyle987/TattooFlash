@@ -9,9 +9,9 @@ namespace TattooFlash.Services
 
         public Task<DesignModel?> GetDesignByIdAsync(Guid id);
 
-        public Task<DesignModel> CreateDesignAsync(DesignModel submission, Stream imageStream);
+        public Task<DesignModel> CreateDesignAsync(DesignModel design, Stream imageStream);
 
-        public Task<DesignModel> UpdateDesignAsync(Guid id, DesignModel design);
+        public Task<DesignModel> UpdateDesignAsync(Guid id, DesignModel design, Stream? imageStream);
 
         public Task<bool> DeleteDesignAsync(Guid id);
 
