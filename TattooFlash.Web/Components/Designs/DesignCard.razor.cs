@@ -25,8 +25,10 @@ namespace TattooFlash.Web.Components.Designs
             // Logic to open the booking dialog for the selected design
             var parameters = new DialogParameters<BookingDialog> { { x => x.Design, Design } };
 
-            await DialogService.ShowAsync<BookingDialog>("Booking", parameters, options: new DialogOptions{
+            await DialogService.ShowAsync<BookingDialog>("Booking", parameters, options: new DialogOptions
+            {
                 MaxWidth = MaxWidth.ExtraLarge,
+                CloseButton = true
             });
 
         }

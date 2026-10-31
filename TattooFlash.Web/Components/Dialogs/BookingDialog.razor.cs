@@ -27,7 +27,6 @@ namespace TattooFlash.Web.Components.Dialogs
         private string ImageUrl => ImageUrlService.GetImageUrl(Design.ImageName);
 
 
-        private void Cancel() => MudDialog.Cancel();
 
     }
 }
