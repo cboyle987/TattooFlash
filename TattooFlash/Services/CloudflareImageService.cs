@@ -1,8 +1,8 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using Microsoft.Extensions.Options;
-using TattooFlash.Components.Interfaces;
 using TattooFlash.Configuration;
+using TattooFlash.Interfaces;
 
 namespace TattooFlash.Services
 {

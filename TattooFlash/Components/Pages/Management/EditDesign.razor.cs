@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Components;
-using TattooFlash.Components.Interfaces;
+using TattooFlash.Interfaces;
 using TattooFlash.Models;
 
 namespace TattooFlash.Components.Pages.Management

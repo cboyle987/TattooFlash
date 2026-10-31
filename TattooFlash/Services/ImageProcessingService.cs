@@ -1,5 +1,5 @@
 ﻿using SkiaSharp;
-using TattooFlash.Components.Interfaces;
+using TattooFlash.Interfaces;
 using TattooFlash.Models;
 
 namespace TattooFlash.Services

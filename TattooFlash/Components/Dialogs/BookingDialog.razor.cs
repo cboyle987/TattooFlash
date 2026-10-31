@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
-using TattooFlash.Components.Interfaces;
+using TattooFlash.Interfaces;
 using TattooFlash.Models;
 
 namespace TattooFlash.Components.Dialogs

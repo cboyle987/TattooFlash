@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
 using TattooFlash.Components;
-using TattooFlash.Components.Interfaces;
 using TattooFlash.Configuration;
 using TattooFlash.Data;
+using TattooFlash.Interfaces;
 using TattooFlash.Repositories;
 using TattooFlash.Services;
 

@@ -1,4 +1,4 @@
-using TattooFlash.Components.Interfaces;
+using TattooFlash.Interfaces;
 using TattooFlash.Models;
 using TattooFlash.Repositories;
 

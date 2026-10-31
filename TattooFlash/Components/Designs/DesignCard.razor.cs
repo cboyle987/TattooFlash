@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc.Razor.Internal;
 using MudBlazor;
 using TattooFlash.Components.Dialogs;
-using TattooFlash.Components.Interfaces;
+using TattooFlash.Interfaces;
 using TattooFlash.Models;
 
 namespace TattooFlash.Components.Designs

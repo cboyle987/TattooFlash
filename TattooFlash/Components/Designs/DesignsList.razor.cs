@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components;
 using TattooFlash.Models;
-using TattooFlash.Components.Interfaces;
 using Microsoft.AspNetCore.Mvc.Razor.Internal;
 using Amazon.Runtime.SharedInterfaces;
+using TattooFlash.Interfaces;
 
 namespace TattooFlash.Components.Designs
 {
