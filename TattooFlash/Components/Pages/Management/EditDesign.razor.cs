@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Components;
+using TattooFlash.Components.Interfaces;
 using TattooFlash.Models;
-using TattooFlash.Services;
 
-namespace TattooFlash.Components.Pages
+namespace TattooFlash.Components.Pages.Management
 {
     public partial class EditDesign
     {

@@ -2,10 +2,11 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc.Razor.Internal;
 using MudBlazor;
+using TattooFlash.Components.Dialogs;
+using TattooFlash.Components.Interfaces;
 using TattooFlash.Models;
-using TattooFlash.Services;
 
-namespace TattooFlash.Components
+namespace TattooFlash.Components.Designs
 {
     public partial class DesignCard
     {

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using TattooFlash.Components.Interfaces;
 using TattooFlash.Models;
-using TattooFlash.Services;
 
-namespace TattooFlash.Components
+namespace TattooFlash.Components.Dialogs
 {
     public partial class BookingDialog
     {

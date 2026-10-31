@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
 using TattooFlash.Components;
+using TattooFlash.Components.Interfaces;
 using TattooFlash.Configuration;
 using TattooFlash.Data;
 using TattooFlash.Repositories;
@@ -26,9 +27,9 @@ builder.Services.AddOptions<R2Configuration>()
 //Add Auth0 authentication 
 builder.Services.AddAuth0WebAppAuthentication(options =>
 {
-    options.Domain = builder.Configuration["Auth0:Domain"];
-    options.ClientId = builder.Configuration["Auth0:ClientId"];
-    options.ClientSecret = builder.Configuration["Auth0:ClientSecret"];
+    options.Domain = builder.Configuration["Auth0:Domain"] ?? throw new InvalidOperationException("Missing Auth0Configuration");
+    options.ClientId = builder.Configuration["Auth0:ClientId"] ?? throw new InvalidOperationException("Missing Auth0Configuration");
+    options.ClientSecret = builder.Configuration["Auth0:ClientSecret"] ?? throw new InvalidOperationException("Missing Auth0Configuration");
 });
 
 builder.Services.AddCascadingAuthenticationState();

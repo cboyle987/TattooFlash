@@ -4,8 +4,23 @@ using TattooFlash.Models;
 
 namespace TattooFlash.Repositories;
 
-public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory) : IDesignRepository
+public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IConfiguration config) : IDesignRepository
 {
+
+    private int PageSize
+    {
+        get
+        {
+            var pageSize = Int32.Parse(config["DefaultPageSize"] ?? throw new InvalidOperationException("Missing Page Size config."));
+            if(pageSize < 0)
+            {
+                throw new InvalidOperationException("Page size config must be greater than 0");
+            }
+
+            return pageSize;
+        }
+    }
+
     public async Task<List<DesignModel>> GetAllDesignsAsync()
     {
         await using var context = await contextFactory.CreateDbContextAsync();
@@ -57,5 +72,29 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory) : 
 
         if (affected == 0)
             throw new KeyNotFoundException("Design not found");
+    }
+
+    public async Task<PaginatedDesignResults> GetDesignsAsync(int pageNumber)
+    {
+        if (pageNumber < 1)
+        {
+            throw new ArgumentException("Invalid page number");
+        }
+
+        await using var context = await contextFactory.CreateDbContextAsync();
+
+        var totalItems = await context.Designs.AsNoTracking().CountAsync();
+
+        var skip = (pageNumber - 1) * PageSize;
+
+        var designs = await context.Designs.AsNoTracking().OrderBy(x => x.Name).ThenBy(x => x.Id).Skip(skip).Take(PageSize).ToListAsync();
+
+        return new PaginatedDesignResults()
+        {
+            Designs = designs,
+            TotalItems = totalItems,
+            PageNumber = pageNumber,
+            PageSize = PageSize
+        };
     }
 }

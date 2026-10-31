@@ -1,4 +1,4 @@
-﻿namespace TattooFlash.Services
+﻿namespace TattooFlash.Components.Interfaces
 {
     public interface IImageService
     {

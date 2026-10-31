@@ -1,12 +1,9 @@
 ﻿using SkiaSharp;
+using TattooFlash.Components.Interfaces;
 using TattooFlash.Models;
 
 namespace TattooFlash.Services
 {
-    public interface IImageProcessingService
-    {
-        ProcessedImage ProcessImage(Stream imageData);
-    }
     public class ImageProcessingService : IImageProcessingService
     {
         private readonly List<SKEncodedImageFormat> _supportedFormats = new List<SKEncodedImageFormat>

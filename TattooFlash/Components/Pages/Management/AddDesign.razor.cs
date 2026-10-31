@@ -2,10 +2,10 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Mvc.Razor.Internal;
 using MudBlazor;
+using TattooFlash.Components.Interfaces;
 using TattooFlash.Models;
-using TattooFlash.Services;
 
-namespace TattooFlash.Components.Pages
+namespace TattooFlash.Components.Pages.Management
 {
 
     public partial class AddDesign

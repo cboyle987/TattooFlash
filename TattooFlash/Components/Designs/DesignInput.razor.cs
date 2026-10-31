@@ -4,14 +4,8 @@ using MudBlazor;
 using System.ComponentModel.DataAnnotations;
 using TattooFlash.Models;
 
-namespace TattooFlash.Components
+namespace TattooFlash.Components.Designs
 {
-
-    public record DesignSumbission()
-    {
-        public required DesignModel Design { get; init; }
-        public IBrowserFile? SelectedImage { get; init; }
-    }
     public partial class DesignInput
     {
         [Parameter, EditorRequired]

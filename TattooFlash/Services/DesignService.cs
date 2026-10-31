@@ -1,4 +1,4 @@
-using TattooFlash.Components;
+using TattooFlash.Components.Interfaces;
 using TattooFlash.Models;
 using TattooFlash.Repositories;
 
@@ -106,4 +106,9 @@ public class DesignService(IDesignRepository repository, IImageProcessingService
      }
 
     public Task ToggleAvailabilityAsync(Guid id) => repository.ToggleAvailabilityAsync(id);
+
+    public Task<PaginatedDesignResults> GetPaginatedDesigns(int pageNumber)
+    {
+        return repository.GetDesignsAsync(pageNumber);
+    }
 }
