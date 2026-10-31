@@ -1,12 +1,12 @@
 ﻿<MudCard>
-    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="200px"/>
+    <div style="aspect-ratio: 1; position: relative;">
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="100%" Height="100%" Style="position: absolute;" />
+    </div>
     <MudCardContent>
-        <MudSkeleton Width="30%" Height="42px;" />
-        <MudSkeleton Width="80%" />
-        <MudSkeleton Width="100%" />
+        <MudSkeleton Width="80%" Height="32px" />
+        <MudSkeleton Width="30%" Height="28px" Class="mt-1" />
     </MudCardContent>
     <MudCardActions>
-        <MudSkeleton Width="64px" Height="40px" Class="ml-2" />
-        <MudSkeleton Width="105px" Height="40px" Class="ml-3" />
+        <MudSkeleton Width="100%" Height="36px" />
     </MudCardActions>
 </MudCard>
