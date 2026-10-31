@@ -5,7 +5,7 @@
 TattooFlash is a tattoo flash catalogue with design management functionality.
 It uses .NET 10, Blazor Interactive Server, MudBlazor, EF Core, and PostgreSQL
 through Npgsql. The solution is `TattooFlash.slnx`; the application project is
-`TattooFlash/TattooFlash.csproj`.
+`TattooFlash.Web/TattooFlash.Web.csproj`.
 
 ## Learning-first collaboration
 
@@ -35,13 +35,13 @@ owner's behalf.
 
 ## Code organisation
 
-- `TattooFlash/Components/`: Razor components, pages, layouts, and code-behind files.
-- `TattooFlash/Services/`: application operations and image URL resolution.
-- `TattooFlash/Repositories/`: database queries and persistence.
-- `TattooFlash/Models/`: domain models.
-- `TattooFlash/Data/`: EF Core database context.
-- `TattooFlash/Migrations/`: EF Core migrations and model snapshot.
-- `TattooFlash/wwwroot/samples/`: current local design images.
+- `TattooFlash.Web/Components/`: Razor components, pages, layouts, and code-behind files.
+- `TattooFlash.Web/Services/`: application operations and image URL resolution.
+- `TattooFlash.Web/Repositories/`: database queries and persistence.
+- `TattooFlash.Web/Models/`: domain models.
+- `TattooFlash.Web/Data/`: EF Core database context.
+- `TattooFlash.Web/Migrations/`: EF Core migrations and model snapshot.
+- `TattooFlash.Web/wwwroot/samples/`: current local design images.
 - `docs/`: reference material and proposed feature designs.
 
 ## Implementation conventions
@@ -66,7 +66,7 @@ Run commands from the repository root:
 
 ```powershell
 dotnet build TattooFlash.slnx
-dotnet run --project TattooFlash/TattooFlash.csproj
+dotnet run --project TattooFlash.Web/TattooFlash.Web.csproj
 ```
 
 Running the application requires a configured `ConnectionStrings:DefaultConnection`

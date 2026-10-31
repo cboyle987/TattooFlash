@@ -1,0 +1,41 @@
+@using TattooFlash.Web.Components.Placeholders
+
+<MudGrid class="mt-4">
+    @if (!_Loading)
+    {
+        @if (!string.IsNullOrEmpty(_loadError))
+        {
+            <MudAlert Severity="Severity.Error">@_loadError</MudAlert>
+        } else
+        {
+            foreach (var design in Results.Designs)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <DesignCard Design="design" />
+                </MudItem>
+            }
+
+            @if (Results.TotalItems > 0 && Results.TotalPages > 1)
+            {
+                <MudItem xs="12">
+                    <div class="d-flex justify-center mt-4">
+                        <MudPagination Count="@Results.TotalPages"
+                                       Selected="@Results.PageNumber"
+                                       SelectedChanged="LoadDesigns"
+                                       Disabled="@_Loading"
+                                       Color="Color.Primary" />
+                    </div>
+                </MudItem>       
+            }
+        }
+        
+    } else
+    {
+        foreach (var i in Enumerable.Range(0, 4))
+        {
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <SkeletonDesignCard />
+            </MudItem>
+        }
+    }
+</MudGrid>

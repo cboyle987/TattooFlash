@@ -1,0 +1,53 @@
+@page "/management"
+@using TattooFlash.Web.Components.Designs
+@using TattooFlash.Web.Components.Placeholders
+@attribute [Authorize]
+
+
+<MudContainer>
+
+    
+    @if (IsLoading)
+    {
+        foreach (var i in Enumerable.Range(0, 4))
+        {
+            <SkeletonDesignManagementItem />
+        }
+    }
+    else
+    {
+        @if (!String.IsNullOrWhiteSpace(LoadingError))
+        {
+            <MudAlert Severity="Severity.Error">@LoadingError</MudAlert>
+        }
+        else
+        {
+            <MudPaper Class="pa-5">
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" Class="d-flex justify-center">
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Href="/management/add-design">Add New Design</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+            foreach (var design in Results.Designs)
+            {
+                <DesignManagementItem @key="design.Id" Design="design"
+                                      OnDesignDeleted="RemoveDesign"
+                                      OnAvailabilityChanged="UpdateAvailability" />
+            }
+
+            @if (Results.TotalItems > 0 && Results.TotalPages > 1)
+            {
+
+                <div class="d-flex justify-center mt-4">
+                    <MudPagination Count="@Results.TotalPages"
+                                   Selected="@Results.PageNumber"
+                                   SelectedChanged="LoadDesigns"
+                                   Disabled="@IsLoading"
+                                   Color="Color.Primary" />
+                </div>
+
+            }
+        }
+    }
+</MudContainer>
