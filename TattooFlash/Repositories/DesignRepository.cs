@@ -37,6 +37,8 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IC
     {
         await using var context = await contextFactory.CreateDbContextAsync();
         design.Id = Guid.NewGuid();
+        design.Created = DateTime.UtcNow;
+        design.Updated = DateTime.UtcNow;
         context.Designs.Add(design);
         await context.SaveChangesAsync();
         return design;
@@ -53,6 +55,7 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IC
         existing.Price = design.Price;
         existing.ImageName = design.ImageName;
         existing.IsAvailable = design.IsAvailable;
+        existing.Updated = DateTime.UtcNow;
         await context.SaveChangesAsync();
         return existing;
     }
@@ -87,7 +90,7 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IC
 
         var skip = (pageNumber - 1) * PageSize;
 
-        var designs = await context.Designs.AsNoTracking().OrderBy(x => x.Name).ThenBy(x => x.Id).Skip(skip).Take(PageSize).ToListAsync();
+        var designs = await context.Designs.AsNoTracking().OrderByDescending(x => x.Created).ThenBy(x => x.Id).Skip(skip).Take(PageSize).ToListAsync();
 
         return new PaginatedDesignResults()
         {

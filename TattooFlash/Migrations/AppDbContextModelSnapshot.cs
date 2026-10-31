@@ -28,6 +28,9 @@ namespace TattooFlash.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("ImageName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -41,6 +44,9 @@ namespace TattooFlash.Migrations
 
                     b.Property<int>("Price")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("Updated")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 

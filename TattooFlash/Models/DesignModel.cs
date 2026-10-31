@@ -9,6 +9,8 @@
         public string ImageName { get; set; } = string.Empty;
 
         public bool IsAvailable { get; set; }
+        public DateTime Created { get; set; }
+        public DateTime Updated { get; set; }
 
 
     }
