@@ -43,6 +43,7 @@ owner's behalf.
 - `TattooFlash.Web/Migrations/`: EF Core migrations and model snapshot.
 - `TattooFlash.Web/wwwroot/samples/`: current local design images.
 - `docs/`: reference material and proposed feature designs.
+- `scripts/`: development helpers, including trusting Caddy's local CA on Windows.
 
 ## Implementation conventions
 
@@ -104,6 +105,8 @@ and access to PostgreSQL. Use .NET user secrets or environment variables for cre
 
 ## Reference documents
 
+- `docs/container-development.md`: current container development setup and usage of
+  `scripts/Trust-CaddyLocalCertificate.ps1` for Windows certificate trust.
 - `docs/ef-core-cheatsheet.md`: EF Core reference.
 - `docs/design-tags-ef-core.md`: proposed tag feature; examples use integer keys,
   while the current design model uses `Guid`. Adapt examples to the actual model.

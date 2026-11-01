@@ -3,6 +3,7 @@ using Amazon.S3;
 using Auth0.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
@@ -18,6 +19,13 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration
     .GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Missing DefaultConnection.");
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse("172.30.10.0/24"));
+});
 
 builder.Services.AddOptions<R2Configuration>()
     .Bind(builder.Configuration.GetSection("R2"))
@@ -62,6 +70,8 @@ builder.Services.AddDbContextFactory<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

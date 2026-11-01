@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "composeLaunchAction": "LaunchBrowser",
+      "composeLaunchUrl": "https://localhost",
+      "serviceActions": {
+        "tattooflash.web": "StartDebugging",
+        "caddy": "StartWithoutDebugging"
+      }
+    }
+  }
+}
