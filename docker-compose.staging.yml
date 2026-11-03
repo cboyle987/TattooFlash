@@ -14,6 +14,8 @@ services:
       R2__Prefix: "designs"
       R2__Endpoint: "${R2_ENDPOINT:?Set R2_ENDPOINT}"
       R2__PublicBaseUrl: "${R2_PUBLIC_BASE_URL:?Set R2_PUBLIC_BASE_URL}"
+      Sentry__Dsn: "${SENTRY_DSN:?Set SENTRY_DSN}"
+      Sentry__Environment: "Staging"
     restart: unless-stopped
   caddy:
     volumes:

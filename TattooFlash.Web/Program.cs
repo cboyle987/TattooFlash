@@ -17,6 +17,14 @@ using TattooFlash.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.UseSentry(options =>
+{
+    options.Dsn = builder.Configuration["Sentry:Dsn"];
+    options.Debug = true;
+    options.EnableLogs = true;
+    options.Environment = builder.Configuration["Sentry:Environment"];
+});
+
 var connectionString = builder.Configuration
     .GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Missing DefaultConnection.");
@@ -119,5 +127,7 @@ app.MapGet("/account/logout", async (HttpContext context) =>
 
     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 });
+
+SentrySdk.CaptureMessage("TattooFlash.Web started successfully.");
 
 app.Run();
