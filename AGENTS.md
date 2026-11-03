@@ -44,6 +44,8 @@ owner's behalf.
 - `TattooFlash.Web/wwwroot/samples/`: current local design images.
 - `docs/`: reference material and proposed feature designs.
 - `scripts/`: development helpers, including trusting Caddy's local CA on Windows.
+  `DeployStaging.sh` is the source for the separately installed, root-owned VPS
+  deployment command; workflow runs do not update that installed copy.
 
 ## Implementation conventions
 
@@ -108,7 +110,9 @@ and access to PostgreSQL. Use .NET user secrets or environment variables for cre
 - `docs/container-development.md`: current container development setup and usage of
   `scripts/Trust-CaddyLocalCertificate.ps1` for Windows certificate trust.
 - `docs/manual-staging-deployment.md`: manual GHCR build, migration bundle, and
-  IONOS staging deployment process; CI/CD remains planned.
+  IONOS staging deployment fallback.
+- `docs/github-actions-staging-deployment.md`: implemented version-tag CI/CD,
+  GitHub environment setup, protected server files, and recovery procedures.
 - `docs/staging-environment-setup.md`: one-time VPS, registry authentication,
   external services, and staging secret configuration.
 - `docs/ef-core-cheatsheet.md`: EF Core reference.

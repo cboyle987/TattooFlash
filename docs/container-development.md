@@ -2,7 +2,8 @@
 
 The current Compose configuration runs the app, Caddy, and PostgreSQL. Visual Studio's
 `docker-compose.override.yml` supplies development settings and local secret mounts.
-For the deployed staging environment, see [Manual staging build and deployment](manual-staging-deployment.md).
+For staging releases, see [GitHub Actions staging deployment](github-actions-staging-deployment.md).
+The [manual deployment guide](manual-staging-deployment.md) remains available as a fallback.
 Initial provisioning is covered in [One-time staging environment setup](staging-environment-setup.md).
 
 ## Trust Caddy's local HTTPS certificate on Windows
