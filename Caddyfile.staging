@@ -1,0 +1,3 @@
+tattoo-flash-staging.connorboyle.dev {
+    reverse_proxy tattooflash.web:8080
+}

@@ -107,6 +107,10 @@ and access to PostgreSQL. Use .NET user secrets or environment variables for cre
 
 - `docs/container-development.md`: current container development setup and usage of
   `scripts/Trust-CaddyLocalCertificate.ps1` for Windows certificate trust.
+- `docs/manual-staging-deployment.md`: manual GHCR build, migration bundle, and
+  IONOS staging deployment process; CI/CD remains planned.
+- `docs/staging-environment-setup.md`: one-time VPS, registry authentication,
+  external services, and staging secret configuration.
 - `docs/ef-core-cheatsheet.md`: EF Core reference.
 - `docs/design-tags-ef-core.md`: proposed tag feature; examples use integer keys,
   while the current design model uses `Guid`. Adapt examples to the actual model.

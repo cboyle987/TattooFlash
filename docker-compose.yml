@@ -30,9 +30,9 @@ services:
     volumes:
     - postgres_data:/var/lib/postgresql
     environment: 
-    - POSTGRES_DB=tattooflash
-    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
-    - POSTGRES_USER=tattooflash_user  
+      POSTGRES_DB: tattooflash
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_USER: tattooflash_user
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "tattooflash_user", "-d", "tattooflash"]
 networks: 

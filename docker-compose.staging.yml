@@ -1,0 +1,23 @@
+services:
+  tattooflash.web:
+    image: ghcr.io/cboyle987/tattooflash:0.1.0
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      ASPNETCORE_HTTP_PORTS: 8080
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=tattooflash;Username=tattooflash_user;Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}"
+      Auth0__Domain: "${AUTH0_DOMAIN:?Set AUTH0_DOMAIN}"
+      Auth0__ClientId: "${AUTH0_CLIENT_ID:?Set AUTH0_CLIENT_ID}"
+      Auth0__ClientSecret: "${AUTH0_CLIENT_SECRET:?Set AUTH0_CLIENT_SECRET}"
+      R2__AccessKeyId: "${R2_ACCESS_KEY_ID:?Set R2_ACCESS_KEY_ID}"
+      R2__SecretAccessKey: "${R2_SECRET_ACCESS_KEY:?Set R2_SECRET_ACCESS_KEY}"
+      R2__BucketName: "${R2_BUCKET_NAME:?Set R2_BUCKET_NAME}"
+      R2__Prefix: "designs"
+      R2__Endpoint: "${R2_ENDPOINT:?Set R2_ENDPOINT}"
+      R2__PublicBaseUrl: "${R2_PUBLIC_BASE_URL:?Set R2_PUBLIC_BASE_URL}"
+    restart: unless-stopped
+  caddy:
+    volumes:
+    - ./Caddyfile.staging:/etc/caddy/Caddyfile:ro
+    restart: unless-stopped
+  postgres:
+    restart: unless-stopped
