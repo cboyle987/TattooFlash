@@ -11,7 +11,7 @@ jobs:
         with:
           dotnet-version: 10.0.x
       - name: Restore dependencies
-        run: dotnet restore .\TattooFlash.slnx 
+        run: dotnet restore TattooFlash.slnx 
       - name: Build project
         run: dotnet build TattooFlash.Web/TattooFlash.Web.csproj --configuration Release --no-restore
       - name: Run tests 
