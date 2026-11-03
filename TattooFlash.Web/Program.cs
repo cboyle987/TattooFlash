@@ -128,6 +128,5 @@ app.MapGet("/account/logout", async (HttpContext context) =>
     await context.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 });
 
-SentrySdk.CaptureMessage("TattooFlash.Web started successfully.");
 
 app.Run();
