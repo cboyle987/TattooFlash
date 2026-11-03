@@ -59,3 +59,4 @@ nunit-*.xml
 # VS specific files
 .vs/
 /.codex-build
+/TattooFlash.Web/Sentry
