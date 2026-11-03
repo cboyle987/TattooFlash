@@ -3,9 +3,15 @@ services:
     image: ${DOCKER_REGISTRY-}tattooflashweb
     networks:
     - proxy
+    - database 
+    depends_on: 
+      postgres: 
+        condition: service_healthy
     build:
       context: .
       dockerfile: TattooFlash.Web/Dockerfile
+    volumes:
+    - dataprotection_keys:/var/lib/tattooflash/keys
   caddy:
     image: caddy:2.11.7
     ports:
@@ -17,11 +23,29 @@ services:
     - caddy_config:/config 
     networks:
     - proxy
+  postgres:
+    image: postgres:18
+    networks: 
+    - database
+    volumes:
+    - postgres_data:/var/lib/postgresql
+    environment: 
+    - POSTGRES_DB=tattooflash
+    - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    - POSTGRES_USER=tattooflash_user  
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "tattooflash_user", "-d", "tattooflash"]
 networks: 
   proxy: 
     ipam:
       config:
       - subnet: 172.30.10.0/24
+  database:
+    ipam:
+      config:
+      - subnet: 172.30.11.0/24
 volumes:
   caddy_data:
   caddy_config:
+  postgres_data:
+  dataprotection_keys:
