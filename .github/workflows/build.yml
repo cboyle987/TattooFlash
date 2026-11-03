@@ -26,6 +26,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
     steps:
       - uses: actions/checkout@v7
       - name: Setup Docker Buildx
@@ -80,4 +82,79 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64
-      
+  deploy-staging:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read 
+      actions: read 
+    concurrency: 
+      group: staging-deploy
+      cancel-in-progress: false
+    steps:
+      - name: Download migration bundle
+        uses: actions/download-artifact@v8
+        with:
+          name: migrations-${{ needs.build-and-push.outputs.version }}
+          path: artifacts
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ vars.STAGING_KNOWN_HOSTS }}
+          STAGING_HOST: ${{ vars.STAGING_HOST }}
+          STAGING_USER: ${{ vars.STAGING_USER }}
+        run: |
+          set -euo pipefail
+          : "${SSH_PRIVATE_KEY:?Missing SSH private key}"
+          : "${SSH_KNOWN_HOSTS:?Missing known hosts}"
+          : "${STAGING_HOST:?Missing staging host}"
+          : "${STAGING_USER:?Missing staging user}"
+
+          install -d -m 700 "$HOME/.ssh"
+          umask 077
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/staging_key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+
+          cat > "$HOME/.ssh/config" <<EOF
+          Host staging
+            HostName $STAGING_HOST
+            User $STAGING_USER
+            IdentityFile ~/.ssh/staging_key
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking yes
+            HostKeyAlgorithms ssh-ed25519
+            ConnectTimeout 10
+          EOF
+      - name: Verify deployment access
+        env:
+          RELEASE_VERSION: ${{ needs.build-and-push.outputs.version }}
+        run: |
+          [[ "$RELEASE_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          test -f "artifacts/efbundle-$RELEASE_VERSION"
+          ssh -T staging \
+            "sudo -n -l /usr/local/sbin/tattooflash-deploy $RELEASE_VERSION"
+      - name: Upload migration bundle
+        env:
+          RELEASE_VERSION: ${{ needs.build-and-push.outputs.version }}
+        run: |
+          scp "artifacts/efbundle-$RELEASE_VERSION" \
+            "staging:/home/deploy/tattooflash/efbundle-$RELEASE_VERSION.upload"
+
+          ssh -T staging \
+            "mv /home/deploy/tattooflash/efbundle-$RELEASE_VERSION.upload /home/deploy/tattooflash/efbundle-$RELEASE_VERSION"
+
+      - name: Deploy staging
+        env:
+          RELEASE_VERSION: ${{ needs.build-and-push.outputs.version }}
+        run: |
+          ssh -T staging \
+            "sudo -n /usr/local/sbin/tattooflash-deploy $RELEASE_VERSION"
+
+      - name: Remove SSH credentials
+        if: always()
+        run: |
+          rm -f "$HOME/.ssh/staging_key" \
+            "$HOME/.ssh/known_hosts" \
+            "$HOME/.ssh/config"

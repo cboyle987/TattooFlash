@@ -1,6 +1,6 @@
 services:
   tattooflash.web:
-    image: ghcr.io/cboyle987/tattooflash:0.1.2
+    image: ghcr.io/cboyle987/tattooflash:${RELEASE_VERSION:?Set RELEASE_VERSION}
     environment:
       ASPNETCORE_ENVIRONMENT: Staging
       ASPNETCORE_HTTP_PORTS: 8080
