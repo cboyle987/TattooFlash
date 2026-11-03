@@ -51,6 +51,8 @@ jobs:
             type=semver,pattern={{version}}
           flavor: | 
             latest=false
+      - name: Restore application dependencies
+        run: dotnet restore TattooFlash.Web/TattooFlash.Web.csproj
       - name: Build ef migration bundle 
         env: 
           RELEASE_VERSION: ${{ steps.meta.outputs.version }}
