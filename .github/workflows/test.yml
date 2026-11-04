@@ -1,0 +1,48 @@
+name: Build validation workflow
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  test: 
+    runs-on: ubuntu-latest
+    env:
+      COVERAGE_TARGET: '90'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Setup .NET 
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore dependencies
+        run: dotnet restore TattooFlash.slnx 
+      - name: Build project
+        run: dotnet build TattooFlash.Web/TattooFlash.Web.csproj --configuration Release --no-restore
+      - name: Run tests 
+        run: >-
+          dotnet test TattooFlash.UnitTest/TattooFlash.UnitTest.csproj
+          --configuration Release
+          --no-restore
+          --collect:"XPlat Code Coverage"
+          --settings TattooFlash.UnitTest/coverage.runsettings
+          --results-directory TestResult
+      - name: Check minimum coverage
+        shell: pwsh
+        run: |
+          $reports = @(Get-ChildItem -Path TestResult -Recurse -Filter coverage.cobertura.xml)
+
+          if ($reports.Count -ne 1) {
+            throw "Expected one coverage report; found $($reports.Count)."
+          }
+
+          [xml]$report = Get-Content -LiteralPath $reports[0].FullName -Raw
+
+          $culture = [System.Globalization.CultureInfo]::InvariantCulture
+          $coverage = [decimal]::Parse($report.coverage.'branch-rate', $culture) * 100
+          $target = [decimal]::Parse($env:COVERAGE_TARGET, $culture)
+
+          Write-Host "Branch coverage: $coverage%. Required: $target%."
+
+          if ($coverage -lt $target) {
+            throw "Coverage is below the required minimum."
+          }

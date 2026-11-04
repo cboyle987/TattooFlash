@@ -1,3 +1,4 @@
+using TattooFlash.Web.Enums;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
 using TattooFlash.Web.Repositories;
@@ -19,13 +20,11 @@ public class DesignService(IDesignRepository repository, IImageProcessingService
 
         if (!processedResult.IsSuccess)
         {
-            var error = processedResult.Error
-                ?? throw new InvalidOperationException("Image processing failed without an error code.");
-            return DesignSaveResult.Failure(error);
+            var error = processedResult.Error!;
+            return DesignSaveResult.Failure((ImageProcessingError) error);
         }
 
-        var image = processedResult.Image
-            ?? throw new InvalidOperationException("Image processing succeeded without an image.");
+        var image = processedResult.Image!;
         using var processedContent = image.Content;
 
         var resultFilename = await imageService.UploadImage(processedContent, image.ContentType, image.Extension, CancellationToken.None);
@@ -62,12 +61,10 @@ public class DesignService(IDesignRepository repository, IImageProcessingService
         var processedResult = imageProcessingService.ProcessImage(imageStream);
         if (!processedResult.IsSuccess)
         {
-            var error = processedResult.Error
-                ?? throw new InvalidOperationException("Image processing failed without an error code.");
-            return DesignSaveResult.Failure(error);
+            var error = processedResult.Error!;
+            return DesignSaveResult.Failure((ImageProcessingError) error);
         }
-        var image = processedResult.Image
-            ?? throw new InvalidOperationException("Image processing succeeded without an image.");
+        var image = processedResult.Image!;
         using var processedContent = image.Content;
 
         var resultFilename = await imageService.UploadImage(processedContent, image.ContentType, image.Extension, CancellationToken.None);
