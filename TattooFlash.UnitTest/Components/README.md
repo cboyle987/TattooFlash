@@ -1,5 +1,11 @@
 # Shared component test setup
 
+Component test folders mirror `TattooFlash.Web/Components/`: design component tests
+live in `Designs/`, and dialog tests live in `Dialogs/`. Use the same relative
+folder and matching namespace for future component tests, including
+`Pages/Management/` for management pages. Shared test infrastructure and its tests
+remain here in `Components/` because they do not correspond to application components.
+
 `ComponentTestContext` wraps bUnit's `BunitContext` with MudBlazor services,
 controllable test authentication, and a `RenderWithProviders<TComponent>` helper.
 The helper renders popover, dialog and snackbar providers once, then the requested
