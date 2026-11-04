@@ -19,7 +19,7 @@ namespace TattooFlash.Web.Services
 
         public async Task DeleteImageAsync(string imageName, CancellationToken cancellationToken)
         {
-            var request = new DeleteObjectRequest { BucketName = _r2config.BucketName, Key = $"{_r2config.Prefix}/{imageName}"};
+            var request = new DeleteObjectRequest { BucketName = _r2config.BucketName, Key = $"{_r2config.Prefix}/{imageName}" };
 
             await _client.DeleteObjectAsync(request, cancellationToken);
         }

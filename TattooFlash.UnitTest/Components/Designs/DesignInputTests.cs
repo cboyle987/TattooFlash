@@ -131,7 +131,8 @@ public class DesignInputTests
         var design = new DesignModel
         {
             Id = existing ? Guid.NewGuid() : Guid.Empty,
-            Name = "Swallow", ImageName = existing ? "existing.webp" : ""
+            Name = "Swallow",
+            ImageName = existing ? "existing.webp" : ""
         };
         var file = Mock.Of<IBrowserFile>(f => f.Name == "replacement.webp" && f.ContentType == "image/webp" && f.Size == 100);
         var submissions = new List<DesignSumbission>();

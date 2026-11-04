@@ -169,7 +169,7 @@ public class DesignServiceTests
         if (uploadFails)
         {
             _processor.Setup(x => x.ProcessImage(source)).Returns(ImageProcessingResult.Success(new ProcessedImage
-                { Content = processed, ContentType = "image/webp", Extension = ".webp" }));
+            { Content = processed, ContentType = "image/webp", Extension = ".webp" }));
             _images.Setup(x => x.UploadImage(processed, "image/webp", ".webp", CancellationToken.None)).ThrowsAsync(failure);
         }
         else _processor.Setup(x => x.ProcessImage(source)).Throws(failure);
@@ -297,8 +297,13 @@ public class DesignServiceTests
         var created = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var design = new DesignModel
         {
-            Id = id, Name = "Rose", Price = 100, ImageName = "old.webp",
-            IsAvailable = true, Created = created, Updated = created
+            Id = id,
+            Name = "Rose",
+            Price = 100,
+            ImageName = "old.webp",
+            IsAvailable = true,
+            Created = created,
+            Updated = created
         };
         _processor.Setup(x => x.ProcessImage(source)).Returns(ImageProcessingResult.Failure(error));
         var sut = CreateService();
@@ -349,7 +354,7 @@ public class DesignServiceTests
     private void ArrangeUpload(Stream source, Stream processed)
     {
         _processor.Setup(x => x.ProcessImage(source)).Returns(ImageProcessingResult.Success(new ProcessedImage
-            { Content = processed, ContentType = "image/webp", Extension = ".webp" }));
+        { Content = processed, ContentType = "image/webp", Extension = ".webp" }));
         _images.Setup(x => x.UploadImage(processed, "image/webp", ".webp", CancellationToken.None)).ReturnsAsync("new.webp");
     }
 }

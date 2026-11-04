@@ -29,11 +29,13 @@ namespace TattooFlash.Web.Components.Pages.Management
                 LoadingError = string.Empty;
                 IsLoading = true;
                 Results = await DesignService.GetPaginatedDesigns(pageNumber);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Logger.LogError(ex, "Error loading designs for management page");
                 LoadingError = "There has been an error loading designs please try again later";
-            } finally
+            }
+            finally
             {
                 IsLoading = false;
             }
@@ -43,7 +45,7 @@ namespace TattooFlash.Web.Components.Pages.Management
         {
             Results.Designs.RemoveAll(design => design.Id == id);
             Results.TotalItems -= 1;
-            if(Results.Designs.Count == 0)
+            if (Results.Designs.Count == 0)
             {
                 NavigationManager.NavigateTo(NavigationManager.Uri, true);
             }

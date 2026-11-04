@@ -12,7 +12,9 @@ public class CloudflareImageServiceTests
     private readonly Mock<IAmazonS3> _client = new(MockBehavior.Strict);
     private CloudflareImageService CreateService() => new(Options.Create(new R2Configuration
     {
-        BucketName = "test-bucket", Prefix = "designs", PublicBaseUrl = "https://images.example.test"
+        BucketName = "test-bucket",
+        Prefix = "designs",
+        PublicBaseUrl = "https://images.example.test"
     }), _client.Object);
 
     [Fact]

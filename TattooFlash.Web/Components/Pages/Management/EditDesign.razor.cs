@@ -46,11 +46,12 @@ namespace TattooFlash.Web.Components.Pages.Management
             _saveError = String.Empty;
             try
             {
-                if(submission is null || submission.Design is null)
+                if (submission is null || submission.Design is null)
                 {
                     _saveError = "Design is null. Cannot save.";
                     return;
-                };
+                }
+                ;
 
                 if (submission.SelectedImage != null)
                 {
@@ -69,7 +70,8 @@ namespace TattooFlash.Web.Components.Pages.Management
                         return;
                     }
 
-                } else
+                }
+                else
                 {
                     await DesignService.UpdateDesignAsync(DesignId, submission.Design, null);
 

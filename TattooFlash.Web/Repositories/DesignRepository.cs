@@ -12,7 +12,7 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IC
         get
         {
             var pageSize = Int32.Parse(config["DefaultPageSize"] ?? throw new InvalidOperationException("Missing Page Size config."));
-            if(pageSize < 0)
+            if (pageSize < 0)
             {
                 throw new InvalidOperationException("Page size config must be greater than 0");
             }

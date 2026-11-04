@@ -33,8 +33,9 @@ namespace TattooFlash.Web.Components.Pages.Management
         private async Task CreateDesign(DesignSumbission submission)
         {
             _saveError = String.Empty;
-            try {
-                if(submission.SelectedImage == null)
+            try
+            {
+                if (submission.SelectedImage == null)
                 {
                     _saveError = "Unable to read selected Image.";
                     return;
@@ -59,11 +60,12 @@ namespace TattooFlash.Web.Components.Pages.Management
 
                 NavigationManager.NavigateTo("/management");
 
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 Logger.LogError(ex, "Error saving design");
                 _saveError = "An Error has occurred saving your design please try again later.";
-            } 
+            }
         }
 
     }

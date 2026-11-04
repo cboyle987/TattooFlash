@@ -17,14 +17,14 @@ namespace TattooFlash.Web.Services
         public ImageProcessingResult ProcessImage(Stream imageData)
         {
             using var codec = CreateCodec(imageData);
-            if(codec == null)
+            if (codec == null)
             {
                 return ImageProcessingResult.Failure(ImageProcessingError.InvalidImage);
             }
 
             var validationError = ValidateImage(codec);
 
-            if(validationError != null)
+            if (validationError != null)
             {
                 return ImageProcessingResult.Failure((ImageProcessingError)validationError);
             }

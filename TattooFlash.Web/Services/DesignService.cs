@@ -21,7 +21,7 @@ public class DesignService(IDesignRepository repository, IImageProcessingService
         if (!processedResult.IsSuccess)
         {
             var error = processedResult.Error!;
-            return DesignSaveResult.Failure((ImageProcessingError) error);
+            return DesignSaveResult.Failure((ImageProcessingError)error);
         }
 
         var image = processedResult.Image!;
@@ -62,7 +62,7 @@ public class DesignService(IDesignRepository repository, IImageProcessingService
         if (!processedResult.IsSuccess)
         {
             var error = processedResult.Error!;
-            return DesignSaveResult.Failure((ImageProcessingError) error);
+            return DesignSaveResult.Failure((ImageProcessingError)error);
         }
         var image = processedResult.Image!;
         using var processedContent = image.Content;

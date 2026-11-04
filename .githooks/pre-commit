@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "Checking formatting..."
+dotnet format whitespace TattooFlash.slnx --no-restore --verify-no-changes
