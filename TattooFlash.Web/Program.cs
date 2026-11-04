@@ -11,6 +11,7 @@ using MudBlazor.Services;
 using TattooFlash.Web.Components;
 using TattooFlash.Web.Configuration;
 using TattooFlash.Web.Data;
+using TattooFlash.Web.Endpoints;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Repositories;
 using TattooFlash.Web.Services;
@@ -107,15 +108,7 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.MapGet("/account/login", async (HttpContext context, string redirectUri = "/") =>
-{
-    var authenticationProperties = new LoginAuthenticationPropertiesBuilder()
-        .WithRedirectUri(redirectUri)
-        .Build();
-
-    await context.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
-
-});
+app.MapGet("/account/login", LoginEndpoint.HandleAsync);
 
 app.MapGet("/account/logout", async (HttpContext context) =>
 {
