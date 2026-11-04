@@ -1,46 +1,61 @@
 # Container development
 
-The current Compose configuration runs the app, Caddy, and PostgreSQL. Visual Studio's
-`docker-compose.override.yml` supplies development settings and local secret mounts.
+The base Compose configuration defines the app, Caddy, and PostgreSQL. The local
+`docker-compose.override.yml` starts the app and Caddy, using the shared NAS
+PostgreSQL database instead of a local database container. It removes the app's
+local PostgreSQL dependency and places that service behind the optional
+`local-postgres` profile. Visual Studio also explicitly marks PostgreSQL as
+`DoNotStart` in the Docker Compose launch profile.
+
 For staging releases, see [GitHub Actions staging deployment](github-actions-staging-deployment.md).
 The [manual deployment guide](manual-staging-deployment.md) remains available as a fallback.
 Initial provisioning is covered in [One-time staging environment setup](staging-environment-setup.md).
+The staging deployment does not use the development override and retains its own PostgreSQL service.
 
-## Apply EF migrations to local container PostgreSQL
+## Configure local development with the NAS database
 
-Run EF tooling on Windows against the local container's published database port.
-The development override maps `127.0.0.1:5433` on Windows to port `5432` inside
-PostgreSQL. From Windows, use **`Host=127.0.0.1;Port=5433`**, not the Docker
-service name `postgres`. App containers use `postgres:5432` instead.
+On both the laptop and desktop, use Visual Studio's **Manage User Secrets** for
+`TattooFlash.Web` to set `ConnectionStrings:DefaultConnection` to the NAS database.
+Use its LAN hostname/IP, published PostgreSQL port, database name, and credentials.
+Do not use `Host=postgres` or `localhost`: the app container must reach the NAS.
+Keep credentials out of tracked files. User secrets are machine-specific and are
+not synced through Git; the development override mounts them into the app container.
+Ensure the NAS endpoint is reachable from Docker Desktop on each machine.
 
-These steps change the local development database only. Do not use staging
-credentials or the staging Compose override. Back up any local data you need
-before applying schema changes.
-
-### 1. Start or identify the local database
-
-Start Docker Desktop with Linux containers. From the repository root in
-PowerShell, use the base and development Compose files explicitly:
+Start the Docker Compose profile in Visual Studio as before, or run:
 
 ```powershell
-docker compose -f docker-compose.yml -f docker-compose.override.yml up -d postgres
-docker compose -f docker-compose.yml -f docker-compose.override.yml ps postgres
-docker compose -f docker-compose.yml -f docker-compose.override.yml port postgres 5432
+docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
 ```
 
-Wait for `healthy` and confirm the published endpoint is `127.0.0.1:5433`. Compose
-requires the local `POSTGRES_PASSWORD`, normally supplied by the ignored root
-`.env` file or your shell environment. Keep its value private.
+Use a current Docker Compose v2 release supporting the `!reset` override tag.
+Do not enable `local-postgres` or explicitly start `postgres` for normal NAS development.
+The base file still requires `POSTGRES_PASSWORD` during interpolation, even when
+the local service is inactive. Retain its existing value in your ignored `.env`;
+this value does not configure the NAS connection or change its password.
 
-If Visual Studio already started the stack, target that same Compose project
-rather than creating another database volume. Check `docker compose ls` and set
-`$env:COMPOSE_PROJECT_NAME = 'the-existing-project-name'` before the commands above
-if necessary. If another instance already occupies port 5433, identify it before
-starting another stack; do not delete volumes to resolve the conflict.
+If an old local PostgreSQL container is still running, stop it once in the same
+Compose project (set `COMPOSE_PROJECT_NAME` for the VS project if necessary):
 
-The database is `tattooflash`, with user `tattooflash_user`. Use the password that
-initialised this local database volume. Editing `POSTGRES_PASSWORD` in `.env`
-does not update an existing PostgreSQL user's password.
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.override.yml stop postgres
+```
+
+This leaves the existing local database volume intact. The app will use the NAS
+once its user-secret connection string is updated and the app restarted.
+
+## Apply EF migrations to the shared NAS development database
+
+Both development machines now share schema and data. Coordinate schema changes
+and back up data before applying migrations. Verify the endpoint is the NAS
+development database before running updates; do not use staging credentials.
+
+### 1. Identify the NAS database
+
+Use the NAS hostname/IP and published port from your development connection string.
+The same endpoint is used by EF on Windows and the app inside Docker, provided
+that hostname resolves from both. No local PostgreSQL container or published
+Windows database port is needed.
 
 ### 2. Check the SDK and EF tool
 
@@ -60,7 +75,7 @@ dotnet tool install --global dotnet-ef --version 10.0.13
 To align an existing global installation, use
 `dotnet tool update --global dotnet-ef --version 10.0.13`.
 
-### 3. Supply the local connection and apply existing migrations
+### 3. Supply the NAS connection and apply existing migrations
 
 The design-time `AppDbContextFactory` reads
 `ConnectionStrings__DefaultConnection` from the environment. It does **not** load
@@ -69,15 +84,15 @@ credentials for generating migrations and bundles, which cannot update a real
 database. Setting only `ASPNETCORE_ENVIRONMENT=Development` does not change that.
 
 In the same PowerShell session at the repository root, run this block. Enter the
-existing local database password at the credential prompt. The connection-string
+NAS development database password at the credential prompt. The connection-string
 builder handles passwords containing connection-string punctuation without
 printing the password or putting it in command history or process arguments.
 
 ```powershell
-$localDbCredential = Get-Credential -UserName 'tattooflash_user' -Message 'Local PostgreSQL container password'
+$localDbCredential = Get-Credential -UserName 'tattooflash_user' -Message 'NAS development database password'
 $localDbConnection = New-Object System.Data.Common.DbConnectionStringBuilder
-$localDbConnection['Host'] = '127.0.0.1'
-$localDbConnection['Port'] = 5433
+$localDbConnection['Host'] = Read-Host 'NAS development database hostname or IP'
+$localDbConnection['Port'] = Read-Host 'NAS PostgreSQL published port'
 $localDbConnection['Database'] = 'tattooflash'
 $localDbConnection['Username'] = $localDbCredential.UserName
 $localDbConnection['Password'] = $localDbCredential.GetNetworkCredential().Password
@@ -114,13 +129,9 @@ before updating the database. Do not edit previously applied migrations.
 
 ### 4. Verify the result
 
-Inspect the history table inside the same local database container:
+Connect your database client to the same NAS development database.
 
-```powershell
-docker compose -f docker-compose.yml -f docker-compose.override.yml exec postgres psql -U tattooflash_user -d tattooflash
-```
-
-At the `psql` prompt, run:
+Run:
 
 ```sql
 SELECT "MigrationId", "ProductVersion"
@@ -128,25 +139,23 @@ FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
 ```
 
-Use `\q` to exit. The initial migrations are
+The initial migrations are
 `20261021192717_InitialCreate` and `20261031190214_AddDesignTimeStamps`; include
 any newer IDs present in the repository. Then check the affected feature in the
 local app. A successful history query does not prove application behaviour.
 
 ### Migration troubleshooting
 
-- **Connection refused:** check the container is healthy and port 5433 is
-  published by the development override. Windows cannot resolve Docker's
-  `postgres` service hostname.
-- **Password authentication failed:** use the password for the existing volume,
-  rather than assuming a newly edited `.env` changed it. Do not print resolved
-  connection strings while investigating.
+- **Connection refused:** check the NAS PostgreSQL container is running, its port
+  is published, and the NAS firewall allows connections from your development machine.
+- **Password authentication failed:** use the NAS database credentials. The local
+  Compose `.env` does not set the NAS password. Do not print connection strings.
 - **Placeholder credentials or `tattooflash_design_time` appears:** the EF
   process did not receive the environment variable. Run the connection setup
   and migration command in the same PowerShell session.
 - **Database is up to date but the app still reports missing tables:** confirm
-  EF and the app target the same database and Compose project. EF on Windows
-  uses `127.0.0.1:5433`; the containerised app uses `postgres:5432`.
+  EF and the app target the same NAS host, port, and database. EF uses the
+  temporary environment variable; the app uses its mounted user secrets.
 - **Fresh-database history query or missing Kerberos library message:** an
   initial history-table query may fail before EF creates it. Judge the final
   exit status and history rows. `GSS Encryption Mode=Disable` in the example

@@ -1,5 +1,7 @@
 services:
   tattooflash.web:
+    # Local development uses the NAS database configured in user secrets.
+    depends_on: !reset {}
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
@@ -7,5 +9,6 @@ services:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
   postgres:
-    ports:
-      - "127.0.0.1:5433:5432"
+    # Keep the base service for deployment, but don't start it locally by default.
+    profiles:
+      - local-postgres

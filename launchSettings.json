@@ -7,7 +7,8 @@
       "composeLaunchUrl": "https://localhost",
       "serviceActions": {
         "tattooflash.web": "StartDebugging",
-        "caddy": "StartWithoutDebugging"
+        "caddy": "StartWithoutDebugging",
+        "postgres": "DoNotStart"
       }
     }
   }
