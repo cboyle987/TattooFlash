@@ -1,4 +1,4 @@
-﻿using TattooFlash.Web.Enums;
+using TattooFlash.Web.Enums;
 
 namespace TattooFlash.Web.Helpers
 {
@@ -20,7 +20,7 @@ namespace TattooFlash.Web.Helpers
                 default:
                     return "There has been an error saving your image";
             }
-                
+
         }
     }
 }

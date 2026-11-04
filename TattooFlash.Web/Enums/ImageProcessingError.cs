@@ -1,4 +1,4 @@
-﻿namespace TattooFlash.Web.Enums
+namespace TattooFlash.Web.Enums
 {
     public enum ImageProcessingError
     {

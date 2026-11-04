@@ -26,7 +26,9 @@ public class DesignManagementTests
         // Arrange
         var designs = Enumerable.Range(0, Math.Min(totalItems, 2)).Select(i => new DesignModel
         {
-            Id = Guid.NewGuid(), Name = $"Design {i}", ImageName = $"design-{i}.webp"
+            Id = Guid.NewGuid(),
+            Name = $"Design {i}",
+            ImageName = $"design-{i}.webp"
         }).ToList();
         var pending = new TaskCompletionSource<PaginatedDesignResults>(TaskCreationOptions.RunContinuationsAsynchronously);
         var service = new Mock<IDesignService>(MockBehavior.Strict);
@@ -67,7 +69,10 @@ public class DesignManagementTests
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(new PaginatedDesignResults
         {
-            Designs = [first], TotalItems = 2, PageSize = 1, PageNumber = 1
+            Designs = [first],
+            TotalItems = 2,
+            PageSize = 1,
+            PageNumber = 1
         });
         service.Setup(x => x.GetPaginatedDesigns(2)).Returns(pending.Task);
         await using var context = CreateContext(service);
@@ -127,7 +132,10 @@ public class DesignManagementTests
         var remaining = CreateDesign("Rose");
         var results = new PaginatedDesignResults
         {
-            Designs = lastItem ? [deleted] : [deleted, remaining], TotalItems = lastItem ? 1 : 2, PageSize = 12, PageNumber = 1
+            Designs = lastItem ? [deleted] : [deleted, remaining],
+            TotalItems = lastItem ? 1 : 2,
+            PageSize = 12,
+            PageNumber = 1
         };
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(results);
@@ -168,7 +176,10 @@ public class DesignManagementTests
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(new PaginatedDesignResults
         {
-            Designs = [design, other], PageNumber = 1, PageSize = 12, TotalItems = 2
+            Designs = [design, other],
+            PageNumber = 1,
+            PageSize = 12,
+            TotalItems = 2
         });
         await using var context = CreateContext(service);
         var page = context.RenderWithProviders<DesignManagement>();

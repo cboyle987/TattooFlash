@@ -114,7 +114,7 @@ app.MapGet("/account/login", async (HttpContext context, string redirectUri = "/
         .Build();
 
     await context.ChallengeAsync(Auth0Constants.AuthenticationScheme, authenticationProperties);
-   
+
 });
 
 app.MapGet("/account/logout", async (HttpContext context) =>

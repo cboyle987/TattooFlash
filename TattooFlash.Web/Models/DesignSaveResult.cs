@@ -1,4 +1,4 @@
-﻿using TattooFlash.Web.Enums;
+using TattooFlash.Web.Enums;
 
 namespace TattooFlash.Web.Models
 {

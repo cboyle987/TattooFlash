@@ -45,14 +45,14 @@ public class ImageOrientationTests
     {
         using var bitmap = new SKBitmap(40, 20);
         for (var y = 0; y < bitmap.Height; y++)
-        for (var x = 0; x < bitmap.Width; x++)
-            bitmap.SetPixel(x, y, (x < 20, y < 10) switch
-            {
-                (true, true) => SKColors.Red,
-                (false, true) => SKColors.Green,
-                (true, false) => SKColors.Blue,
-                _ => SKColors.Yellow
-            });
+            for (var x = 0; x < bitmap.Width; x++)
+                bitmap.SetPixel(x, y, (x < 20, y < 10) switch
+                {
+                    (true, true) => SKColors.Red,
+                    (false, true) => SKColors.Green,
+                    (true, false) => SKColors.Blue,
+                    _ => SKColors.Yellow
+                });
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, 100);
         var jpeg = data.ToArray();

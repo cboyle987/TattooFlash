@@ -4,7 +4,7 @@ namespace TattooFlash.Web.Interfaces
 {
     /// <summary>Provides design catalogue operations, including image processing and storage.</summary>
     public interface IDesignService
-    { 
+    {
         /// <summary>Retrieves all designs ordered by name.</summary>
         /// <returns>All designs, or an empty list when none exist.</returns>
         public Task<List<DesignModel>> GetAllDesignsAsync();

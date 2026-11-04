@@ -378,8 +378,13 @@ public class DesignRepositoryTests : IAsyncLifetime
 
     private static DesignModel Design(string name) => new()
     {
-        Id = Guid.NewGuid(), Name = name, Price = 100, ImageName = "original.webp",
-        IsAvailable = true, Created = OriginalTimestamp, Updated = OriginalTimestamp
+        Id = Guid.NewGuid(),
+        Name = name,
+        Price = 100,
+        ImageName = "original.webp",
+        IsAvailable = true,
+        Created = OriginalTimestamp,
+        Updated = OriginalTimestamp
     };
 
     private static void AssertDesignEqual(DesignModel expected, DesignModel actual)
