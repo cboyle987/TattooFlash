@@ -16,7 +16,7 @@ public class MainLayoutTests
         context.Authorization.SetNotAuthorized();
         RenderFragment body = builder => builder.AddMarkupContent(0, "<p id='page-content'>Page content</p>");
 
-        // Act: the layout supplies its own theme and dialog providers.
+        // Act: the layout supplies its own theme, dialog and snackbar providers.
         var layout = context.Render<MainLayout>(p => p.Add(x => x.Body, body));
 
         // Assert
@@ -27,6 +27,7 @@ public class MainLayoutTests
         Assert.Empty(layout.FindComponents<NavMenu>());
         Assert.Empty(layout.FindComponents<MudDrawer>());
         Assert.Single(layout.FindComponents<MudDialogProvider>());
+        Assert.Single(layout.FindComponents<MudSnackbarProvider>());
         var theme = layout.FindComponent<MudThemeProvider>();
         Assert.NotNull(theme.Instance.Theme);
         Assert.False(theme.Instance.GetState(x => x.IsDarkMode));

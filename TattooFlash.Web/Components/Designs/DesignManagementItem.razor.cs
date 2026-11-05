@@ -84,7 +84,7 @@ namespace TattooFlash.Web.Components.Designs
             {
                 await DesignService.ToggleAvailabilityAsync(Design.Id);
                 await OnAvailabilityChanged.InvokeAsync(Design.Id);
-                Snackbar.Add($"Design availability changed to {(Design.IsAvailable ? "Unavailable" : "Available")}.", Severity.Success);
+                Snackbar.Add($"Design availability changed to {(Design.IsAvailable ? "Available" : "Unavailable")}.", Severity.Success);
             }
             catch (Exception)
             {
