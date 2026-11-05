@@ -4,23 +4,31 @@
 
 
 <MudContainer>
-    <MudPaper>
+    <MudPaper Class="my-3">
         @if (_isLoading)
         {
             <MudProgressCircular Indeterminate />
         } else
         {
+
             <MudGrid>
                 <MudItem xs="12" class="d-flex justify-center">
                     <MudText Typo="Typo.h3">Edit Design</MudText>
                 </MudItem>
             </MudGrid>
-            @if (!string.IsNullOrEmpty(_saveError))
+            @if (!string.IsNullOrEmpty(_loadError))
             {
-                <MudAlert Severity="Severity.Error">@_saveError</MudAlert>
-            }
+              
+                <MudAlert class="mx-5" Severity="Severity.Error">@_loadError</MudAlert>
+            } else
+            {
+                @if (!string.IsNullOrEmpty(_saveError))
+                {
+                    <MudAlert Severity="Severity.Error">@_saveError</MudAlert>
+                }
 
-            <DesignInput Design="Design" OnValidSubmit="UpdateDesign" />
+                <DesignInput Design="Design" OnValidSubmit="UpdateDesign" />
+            }       
         }
 
         

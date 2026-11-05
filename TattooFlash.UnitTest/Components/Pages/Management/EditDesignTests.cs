@@ -36,6 +36,7 @@ public class EditDesignTests
         // Act
         page.Render(p => p.Add(x => x.DesignId, second.Id));
         AssertLoading(page);
+        Assert.Null(page.Instance.Design);
         secondLoad.SetResult(second);
 
         // Assert
@@ -109,25 +110,145 @@ public class EditDesignTests
         service.VerifyNoOtherCalls();
     }
 
-    [Fact]
-    public async Task WhenLookupFailsThenPageSetsItsLoadError()
+    [Theory]
+    [InlineData(false, "Design not found.")]
+    [InlineData(true, "An error occurred while loading the design. Please try again later.")]
+    public async Task WhenLookupReturnsNoDesignOrFailsThenErrorIsShownWithoutTheRealForm(bool fails, string error)
     {
-        // Arrange: isolate page error handling from DesignInput's non-null parameter requirement.
+        // Arrange: keep the real DesignInput so rendering it with null would fail this test.
         var id = Guid.NewGuid();
+        var load = new TaskCompletionSource<DesignModel?>(TaskCreationOptions.RunContinuationsAsynchronously);
         var service = new Mock<IDesignService>(MockBehavior.Strict);
-        service.Setup(x => x.GetDesignByIdAsync(id)).ThrowsAsync(new InvalidOperationException("Load failed"));
+        service.Setup(x => x.GetDesignByIdAsync(id)).Returns(load.Task);
         await using var context = CreateContext(service);
-        context.ComponentFactories.AddStub<DesignInput>();
+        var page = context.RenderWithProviders<EditDesign>(p => p.Add(x => x.DesignId, id));
+        AssertLoading(page);
 
         // Act
-        var page = context.RenderWithProviders<EditDesign>(p => p.Add(x => x.DesignId, id));
+        if (fails)
+            load.SetException(new InvalidOperationException("Load failed"));
+        else
+            load.SetResult(null);
 
         // Assert
+        page.WaitForAssertion(() =>
+        {
+            Assert.Null(page.Instance.Design);
+            Assert.Empty(page.FindComponents<MudProgressCircular>());
+            Assert.Empty(page.FindComponents<DesignInput>());
+            Assert.Empty(page.FindAll("form"));
+            var alert = page.FindComponent<MudAlert>();
+            Assert.Equal(Severity.Error, alert.Instance.Severity);
+            Assert.Contains(error, alert.Markup);
+        });
+        service.Verify(x => x.GetDesignByIdAsync(id), Times.Once);
+        service.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(false, "Design not found.")]
+    [InlineData(true, "An error occurred while loading the design. Please try again later.")]
+    public async Task WhenNextLookupReturnsNoDesignOrFailsThenPreviousDesignIsCleared(bool fails, string error)
+    {
+        // Arrange
+        var first = CreateDesign();
+        var nextId = Guid.NewGuid();
+        var nextLoad = new TaskCompletionSource<DesignModel?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var service = new Mock<IDesignService>(MockBehavior.Strict);
+        service.Setup(x => x.GetDesignByIdAsync(first.Id)).ReturnsAsync(first);
+        service.Setup(x => x.GetDesignByIdAsync(nextId)).Returns(nextLoad.Task);
+        await using var context = CreateContext(service);
+        var page = context.RenderWithProviders<EditDesign>(p => p.Add(x => x.DesignId, first.Id));
+        Assert.Same(first, page.FindComponent<DesignInput>().Instance.Design);
+
+        // Act
+        page.Render(p => p.Add(x => x.DesignId, nextId));
+        AssertLoading(page);
         Assert.Null(page.Instance.Design);
-        Assert.Empty(page.FindComponents<MudProgressCircular>());
-        var alert = page.FindComponent<MudAlert>();
-        Assert.Equal(Severity.Error, alert.Instance.Severity);
-        Assert.Contains("An error occurred while loading the design. Please try again later.", alert.Markup);
+        if (fails)
+            nextLoad.SetException(new InvalidOperationException("Load failed"));
+        else
+            nextLoad.SetResult(null);
+
+        // Assert
+        page.WaitForAssertion(() =>
+        {
+            Assert.Null(page.Instance.Design);
+            Assert.Empty(page.FindComponents<MudProgressCircular>());
+            Assert.Empty(page.FindComponents<DesignInput>());
+            var alert = page.FindComponent<MudAlert>();
+            Assert.Equal(Severity.Error, alert.Instance.Severity);
+            Assert.Contains(error, alert.Markup);
+        });
+        service.Verify(x => x.GetDesignByIdAsync(first.Id), Times.Once);
+        service.Verify(x => x.GetDesignByIdAsync(nextId), Times.Once);
+        service.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(false, "Design not found.")]
+    [InlineData(true, "An error occurred while loading the design. Please try again later.")]
+    public async Task WhenParametersChangeAfterALoadErrorThenTheNextDesignCanBeEdited(bool fails, string error)
+    {
+        // Arrange
+        var firstId = Guid.NewGuid();
+        var next = CreateDesign();
+        var nextLoad = new TaskCompletionSource<DesignModel?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var service = new Mock<IDesignService>(MockBehavior.Strict);
+        if (fails)
+            service.Setup(x => x.GetDesignByIdAsync(firstId)).ThrowsAsync(new InvalidOperationException("Load failed"));
+        else
+            service.Setup(x => x.GetDesignByIdAsync(firstId)).ReturnsAsync((DesignModel?)null);
+        service.Setup(x => x.GetDesignByIdAsync(next.Id)).Returns(nextLoad.Task);
+        await using var context = CreateContext(service);
+        var page = context.RenderWithProviders<EditDesign>(p => p.Add(x => x.DesignId, firstId));
+        Assert.Contains(error, page.FindComponent<MudAlert>().Markup);
+        Assert.Empty(page.FindComponents<DesignInput>());
+
+        // Act
+        page.Render(p => p.Add(x => x.DesignId, next.Id));
+        AssertLoading(page);
+        Assert.Empty(page.FindComponents<MudAlert>());
+        nextLoad.SetResult(next);
+
+        // Assert
+        page.WaitForAssertion(() =>
+        {
+            Assert.Empty(page.FindComponents<MudProgressCircular>());
+            Assert.Empty(page.FindComponents<MudAlert>());
+            Assert.Same(next, page.FindComponent<DesignInput>().Instance.Design);
+        });
+        service.Verify(x => x.GetDesignByIdAsync(firstId), Times.Once);
+        service.Verify(x => x.GetDesignByIdAsync(next.Id), Times.Once);
+        service.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task WhenParametersChangeAfterASaveErrorThenTheErrorIsClearedForTheNextDesign()
+    {
+        // Arrange
+        var first = CreateDesign();
+        var next = CreateDesign("Rose");
+        var service = new Mock<IDesignService>(MockBehavior.Strict);
+        service.Setup(x => x.GetDesignByIdAsync(first.Id)).ReturnsAsync(first);
+        service.Setup(x => x.GetDesignByIdAsync(next.Id)).ReturnsAsync(next);
+        service.Setup(x => x.UpdateDesignAsync(first.Id, first, null))
+            .ThrowsAsync(new InvalidOperationException("Save failed"));
+        await using var context = CreateContext(service);
+        var page = context.RenderWithProviders<EditDesign>(p => p.Add(x => x.DesignId, first.Id));
+        await SubmitAsync(page, new DesignSumbission { Design = first });
+        Assert.Contains("An Error has occurred saving your design please try again later.", page.FindComponent<MudAlert>().Markup);
+
+        // Act
+        page.Render(p => p.Add(x => x.DesignId, next.Id));
+
+        // Assert
+        Assert.Same(next, page.FindComponent<DesignInput>().Instance.Design);
+        Assert.Empty(page.FindComponents<MudAlert>());
+        service.Verify(x => x.GetDesignByIdAsync(first.Id), Times.Once);
+        service.Verify(x => x.GetDesignByIdAsync(next.Id), Times.Once);
+        service.Verify(x => x.UpdateDesignAsync(first.Id, first, null), Times.Once);
+        service.VerifyNoOtherCalls();
     }
 
     [Theory]

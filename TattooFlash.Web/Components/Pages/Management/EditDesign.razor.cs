@@ -11,6 +11,7 @@ namespace TattooFlash.Web.Components.Pages.Management
         public Guid DesignId { get; set; }
 
         private string _saveError = String.Empty;
+        private string _loadError = String.Empty;
         public DesignModel? Design = default;
 
         private bool _isLoading = true;
@@ -26,14 +27,22 @@ namespace TattooFlash.Web.Components.Pages.Management
         protected override async Task OnParametersSetAsync()
         {
             _isLoading = true;
+            _loadError = String.Empty;
+            Design = null;
+            _saveError = String.Empty;
             try
             {
                 Design = await DesignService.GetDesignByIdAsync(DesignId);
+                if (Design is null)
+                {
+                    Logger.LogWarning("Design with ID {DesignId} not found.", DesignId);
+                    _loadError = "Design not found.";
+                }
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Error loading design");
-                _saveError = "An error occurred while loading the design. Please try again later.";
+                _loadError = "An error occurred while loading the design. Please try again later.";
             }
             finally
             {
