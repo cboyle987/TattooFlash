@@ -37,7 +37,8 @@ test project. They require no external database or credentials. PostgreSQL
 collation, UUID ordering, migrations and concurrent transaction behaviour need
 separate tests against PostgreSQL.
 
-Known issue outside this change: `DefaultPageSize = 0` is currently accepted,
-although the repository's validation message requires a value greater than zero.
-The tests cover missing, negative, malformed and overflowing configuration values;
-they do not establish zero as valid configuration.
+`Configuration/PaginationConfigurationTests.cs` verifies that zero, missing,
+negative, malformed and overflowing page sizes prevent startup with a configuration
+error. The repository consumes the validated options value and reuses it for queries.
+Repository tests verify that a page size of one produces valid pagination alongside
+the existing ordering and multi-page cases. The configured default remains 12.

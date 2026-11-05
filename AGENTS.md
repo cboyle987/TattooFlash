@@ -91,6 +91,8 @@ and access to PostgreSQL. Use .NET user secrets or environment variables for cre
   relational queries but do not verify PostgreSQL-specific behaviour.
   Run `dotnet test TattooFlash.slnx`. Tests use Arrange, Act, Assert and require no
   database or Cloudflare credentials.
+  Configuration tests live in `TattooFlash.UnitTest/Configuration/` and verify
+  options validation, including rejection of invalid values during host startup.
 - For behaviour changes, perform the
   relevant manual checks when the application and database are available.
 - For UI changes, check the affected page, loading and error states, and mobile layout.

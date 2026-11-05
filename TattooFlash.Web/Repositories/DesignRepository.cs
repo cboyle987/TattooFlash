@@ -1,25 +1,14 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using TattooFlash.Web.Configuration;
 using TattooFlash.Web.Data;
 using TattooFlash.Web.Models;
 
 namespace TattooFlash.Web.Repositories;
 
-public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IConfiguration config) : IDesignRepository
+public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IOptions<PaginationConfiguration> paginationOptions) : IDesignRepository
 {
-
-    private int PageSize
-    {
-        get
-        {
-            var pageSize = Int32.Parse(config["DefaultPageSize"] ?? throw new InvalidOperationException("Missing Page Size config."));
-            if (pageSize < 0)
-            {
-                throw new InvalidOperationException("Page size config must be greater than 0");
-            }
-
-            return pageSize;
-        }
-    }
+    private readonly int PageSize = paginationOptions.Value.DefaultPageSize;
 
     public async Task<List<DesignModel>> GetAllDesignsAsync()
     {
