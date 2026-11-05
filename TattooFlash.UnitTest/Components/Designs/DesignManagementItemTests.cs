@@ -83,9 +83,8 @@ public class DesignManagementItemTests
         service.Verify(x => x.DeleteDesignAsync(design.Id), Times.Once);
         service.VerifyNoOtherCalls();
         Assert.Equal(new[] { design.Id }, deleted);
-        var notifications = context.Services.GetRequiredService<ISnackbar>().ShownSnackbars;
         if (exists)
-            Assert.Empty(notifications);
+            AssertNotification(context, "Design deleted successfully.", Severity.Success);
         else
         {
             AssertNotification(context, "This design was already deleted.", Severity.Info);
@@ -149,12 +148,14 @@ public class DesignManagementItemTests
     }
 
     [Theory]
-    [InlineData(false)]
-    [InlineData(true)]
-    public async Task WhenAvailabilityIsToggledThenParentIsNotifiedOnlyOnSuccess(bool fails)
+    [InlineData(false, true, "Design availability changed to Unavailable.")]
+    [InlineData(false, false, "Design availability changed to Available.")]
+    [InlineData(true, true, "Could not change availability. Please try again.")]
+    [InlineData(true, false, "Could not change availability. Please try again.")]
+    public async Task WhenAvailabilityIsToggledThenParentIsNotifiedOnlyOnSuccess(bool fails, bool available, string message)
     {
         // Arrange
-        var design = CreateDesign();
+        var design = CreateDesign(available);
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         if (fails)
             service.Setup(x => x.ToggleAvailabilityAsync(design.Id)).ThrowsAsync(new InvalidOperationException("Toggle failed"));
@@ -163,7 +164,12 @@ public class DesignManagementItemTests
         await using var context = CreateContext(design, service);
         var changed = new List<Guid>();
         var item = context.RenderWithProviders<DesignManagementItem>(p => p
-            .Add(x => x.Design, design).Add(x => x.OnAvailabilityChanged, (Guid id) => changed.Add(id)));
+            .Add(x => x.Design, design).Add(x => x.OnAvailabilityChanged, (Guid id) =>
+            {
+                changed.Add(id);
+                // Match DesignManagement: the parent updates the model before the callback returns.
+                design.IsAvailable = !design.IsAvailable;
+            }));
 
         // Act
         await ClickAction(item, "Toggle Availability");
@@ -171,19 +177,17 @@ public class DesignManagementItemTests
         // Assert
         service.Verify(x => x.ToggleAvailabilityAsync(design.Id), Times.Once);
         service.VerifyNoOtherCalls();
-        var notifications = context.Services.GetRequiredService<ISnackbar>().ShownSnackbars;
         if (fails)
         {
             Assert.Empty(changed);
-            AssertNotification(context, "Could not change availability. Please try again.", Severity.Error);
+            AssertNotification(context, message, Severity.Error);
         }
         else
         {
             Assert.Equal(new[] { design.Id }, changed);
-            Assert.Empty(notifications);
+            AssertNotification(context, message, Severity.Success);
         }
-        // The parent owns updating the model after receiving the callback.
-        Assert.True(design.IsAvailable);
+        Assert.Equal(fails ? available : !available, design.IsAvailable);
         AssertActionsEnabled(item);
     }
 
@@ -206,7 +210,11 @@ public class DesignManagementItemTests
         var item = context.RenderWithProviders<DesignManagementItem>(p => p
             .Add(x => x.Design, design)
             .Add(x => x.OnDesignDeleted, (Guid id) => deleted.Add(id))
-            .Add(x => x.OnAvailabilityChanged, (Guid id) => changed.Add(id)));
+            .Add(x => x.OnAvailabilityChanged, (Guid id) =>
+            {
+                changed.Add(id);
+                design.IsAvailable = !design.IsAvailable;
+            }));
         var deleteButton = item.FindComponents<MudButton>().Single(b => b.Markup.Contains("Delete Design"));
         var toggleButton = item.FindComponents<MudButton>().Single(b => b.Markup.Contains("Toggle Availability"));
 
@@ -239,7 +247,10 @@ public class DesignManagementItemTests
         item.WaitForAssertion(() => AssertActionsEnabled(item));
         Assert.Empty(deleted);
         Assert.Equal(deleting ? Array.Empty<Guid>() : new[] { design.Id }, changed);
-        Assert.Empty(context.Services.GetRequiredService<ISnackbar>().ShownSnackbars);
+        if (deleting)
+            Assert.Empty(context.Services.GetRequiredService<ISnackbar>().ShownSnackbars);
+        else
+            AssertNotification(context, "Design availability changed to Unavailable.", Severity.Success);
     }
 
     private static DesignModel CreateDesign(bool available = true) => new()

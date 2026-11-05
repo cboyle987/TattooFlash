@@ -53,7 +53,12 @@ builder.Services.AddAuth0WebAppAuthentication(options =>
 builder.Services.AddCascadingAuthenticationState();
 
 // Add MudBlazor services
-builder.Services.AddMudServices();
+builder.Services.AddMudServices(options =>
+{
+    options.SnackbarConfiguration.PositionClass = MudBlazor.Defaults.Classes.Position.BottomLeft;
+    options.SnackbarConfiguration.PreventDuplicates = true;
+    options.SnackbarConfiguration.VisibleStateDuration = 2500;
+});
 
 // Register app services 
 builder.Services.AddScoped<IDesignRepository, DesignRepository>();

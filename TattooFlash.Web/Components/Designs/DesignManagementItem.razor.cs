@@ -53,8 +53,15 @@ namespace TattooFlash.Web.Components.Designs
                 {
                     var result = await DesignService.DeleteDesignAsync(Design.Id);
                     await OnDesignDeleted.InvokeAsync(Design.Id);
+
                     if (!result)
+                    {
                         Snackbar.Add("This design was already deleted.", Severity.Info);
+                    }
+                    else
+                    {
+                        Snackbar.Add("Design deleted successfully.", Severity.Success);
+                    }
                 }
             }
             catch (Exception)
@@ -77,6 +84,7 @@ namespace TattooFlash.Web.Components.Designs
             {
                 await DesignService.ToggleAvailabilityAsync(Design.Id);
                 await OnAvailabilityChanged.InvokeAsync(Design.Id);
+                Snackbar.Add($"Design availability changed to {(Design.IsAvailable ? "Available" : "Unavailable")}.", Severity.Success);
             }
             catch (Exception)
             {
