@@ -1,7 +1,8 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using Moq;
+using TattooFlash.Web.Configuration;
 using TattooFlash.Web.Data;
 using TattooFlash.Web.Models;
 using TattooFlash.Web.Repositories;
@@ -262,7 +263,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         await SeedAsync(designs.Reverse().ToArray());
         var expected = designs.OrderByDescending(x => x.Created).ThenBy(x => x.Id)
             .Skip((page - 1) * 2).Take(2).Select(x => x.Id).ToArray();
-        var sut = CreateRepository("2");
+        var sut = CreateRepository(2);
 
         // Act
         var result = await sut.GetDesignsAsync(page);
@@ -280,7 +281,7 @@ public class DesignRepositoryTests : IAsyncLifetime
     public async Task GetDesignsAsync_WhenEmpty_ReturnsEmptyPageWithMetadata()
     {
         // Arrange
-        var sut = CreateRepository("3");
+        var sut = CreateRepository(3);
 
         // Act
         var result = await sut.GetDesignsAsync(1);
@@ -308,23 +309,26 @@ public class DesignRepositoryTests : IAsyncLifetime
         _factory.Verify(x => x.CreateDbContextAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    [Theory]
-    [InlineData(null, typeof(InvalidOperationException))]
-    [InlineData("-1", typeof(InvalidOperationException))]
-    [InlineData("invalid", typeof(FormatException))]
-    [InlineData("2147483648", typeof(OverflowException))]
-    public async Task GetDesignsAsync_InvalidPageSizeConfiguration_Throws(string? pageSize, Type exceptionType)
+    [Fact]
+    public async Task GetDesignsAsync_WithPageSizeOne_ReturnsOneDesignPerPage()
     {
         // Arrange
-        var sut = CreateRepository(pageSize);
+        var first = Design("Anchor");
+        first.Created = OriginalTimestamp.AddDays(1);
+        var second = Design("Rose");
+        await SeedAsync(first, second);
+        var sut = CreateRepository(1);
 
         // Act
-        var exception = await Record.ExceptionAsync(() => sut.GetDesignsAsync(1));
+        var result = await sut.GetDesignsAsync(2);
 
         // Assert
-        Assert.NotNull(exception);
-        Assert.IsType(exceptionType, exception);
-        AssertOperationContextWasDisposed();
+        Assert.Equal(second.Id, Assert.Single(result.Designs).Id);
+        Assert.Equal(2, result.TotalItems);
+        Assert.Equal(2, result.PageNumber);
+        Assert.Equal(1, result.PageSize);
+        Assert.Equal(2, result.TotalPages);
+        AssertReadContextWasUntrackedAndDisposed();
     }
 
     [Fact]
@@ -345,14 +349,8 @@ public class DesignRepositoryTests : IAsyncLifetime
             Assert.Throws<ObjectDisposedException>(() => context.Designs.ToList());
     }
 
-    private DesignRepository CreateRepository(string? pageSize = "2")
-    {
-        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
-        {
-            ["DefaultPageSize"] = pageSize
-        }).Build();
-        return new DesignRepository(_factory.Object, config);
-    }
+    private DesignRepository CreateRepository(int pageSize = 2) =>
+        new(_factory.Object, Options.Create(new PaginationConfiguration { DefaultPageSize = pageSize }));
 
     private async Task SeedAsync(params DesignModel[] designs)
     {
