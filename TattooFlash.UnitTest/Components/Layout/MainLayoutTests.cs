@@ -1,5 +1,9 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using MudBlazor;
 using MudBlazor.Extensions;
 using TattooFlash.Web.Components.Layout;
@@ -13,6 +17,8 @@ public class MainLayoutTests
     {
         // Arrange
         await using var context = new ComponentTestContext();
+        var mockContext = new Mock<IConfiguration>();
+        context.Services.AddSingleton(mockContext.Object);
         context.Authorization.SetNotAuthorized();
         RenderFragment body = builder => builder.AddMarkupContent(0, "<p id='page-content'>Page content</p>");
 
@@ -42,6 +48,8 @@ public class MainLayoutTests
         // Arrange
         await using var context = new ComponentTestContext();
         context.Authorization.SetAuthorized("test-user");
+        var mockContext = new Mock<IConfiguration>();
+        context.Services.AddSingleton(mockContext.Object);
         var layout = context.Render<MainLayout>();
         Assert.Equal("Logout", layout.Find("a[href='/account/logout']").TextContent.Trim());
         Assert.Empty(layout.FindAll("a[href='/account/login']"));
@@ -58,5 +66,44 @@ public class MainLayoutTests
         layout.WaitForAssertion(() => Assert.True(drawer.Instance.GetState(x => x.Open)));
         await menu.Find("button").ClickAsync(new());
         layout.WaitForAssertion(() => Assert.False(drawer.Instance.GetState(x => x.Open)));
+    }
+
+    [Fact]
+    public async Task WhenPageTitleIsSetInConifgThenItIsDisplayed()
+    {
+        // Arrange
+        await using var context = new ComponentTestContext();
+        var mockContext = new Mock<IConfiguration>();
+        mockContext.Setup(x => x["SiteName"]).Returns("Unit test title");
+        context.Services.AddSingleton(mockContext.Object);
+        context.Authorization.SetNotAuthorized();
+        RenderFragment body = builder => builder.AddMarkupContent(0, "<p id='page-content'>Page content</p>");
+
+        // Act: the layout supplies its own theme, dialog and snackbar providers.
+        var layout = context.Render<MainLayout>(p => p.Add(x => x.Body, body));
+        var head = context.Render<HeadOutlet>();
+
+        // Assert
+        Assert.Contains("Unit test title", head.Find("title").TextContent) ;
+
+    }
+
+    [Fact]
+    public async Task WhenPageTitleIsNotSetInConifgThenDefaultIsDisplayed()
+    {
+        // Arrange
+        await using var context = new ComponentTestContext();
+        var mockContext = new Mock<IConfiguration>();
+        context.Services.AddSingleton(mockContext.Object);
+        context.Authorization.SetNotAuthorized();
+        RenderFragment body = builder => builder.AddMarkupContent(0, "<p id='page-content'>Page content</p>");
+
+        // Act: the layout supplies its own theme, dialog and snackbar providers.
+        var layout = context.Render<MainLayout>(p => p.Add(x => x.Body, body));
+        var head = context.Render<HeadOutlet>();
+
+        // Assert
+        Assert.Contains("Tattoo Flash", head.Find("title").TextContent);
+
     }
 }

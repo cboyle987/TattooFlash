@@ -1,5 +1,6 @@
 using Bunit;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
@@ -26,6 +27,7 @@ public class ManagementNotificationTests
         var design = CreateDesign();
         var remaining = CreateDesign("Rose");
         var service = new Mock<IDesignService>(MockBehavior.Strict);
+        var mockConfig = new Mock<IConfiguration>();
         service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(new PaginatedDesignResults
         {
             Designs = [design, remaining],
@@ -38,6 +40,7 @@ public class ManagementNotificationTests
         else
             service.Setup(x => x.DeleteDesignAsync(design.Id)).ReturnsAsync(outcome == "deleted");
         await using var context = CreateContext(service);
+        context.Services.AddSingleton(mockConfig.Object);
         context.Authorization.SetAuthorized("test-user");
         RenderFragment body = builder =>
         {
@@ -81,6 +84,7 @@ public class ManagementNotificationTests
         // Arrange: use the real page so its callback updates the shared design model.
         var design = CreateDesign(available: initiallyAvailable);
         var service = new Mock<IDesignService>(MockBehavior.Strict);
+        var mockConfig = new Mock<IConfiguration>();
         service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(new PaginatedDesignResults
         {
             Designs = [design],
@@ -93,6 +97,7 @@ public class ManagementNotificationTests
         else
             service.Setup(x => x.ToggleAvailabilityAsync(design.Id)).Returns(Task.CompletedTask);
         await using var context = CreateContext(service);
+        context.Services.AddSingleton(mockConfig.Object);
         context.Authorization.SetAuthorized("test-user");
         RenderFragment body = builder =>
         {
