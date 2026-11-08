@@ -8,5 +8,14 @@ namespace TattooFlash.Web.Data
         {
         }
         public DbSet<Models.DesignModel> Designs { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Models.DesignModel>()
+                .HasMany(d => d.Tags)
+                .WithMany(t => t.Designs)
+                .UsingEntity(j => j.ToTable("DesignTags"));
+        }
     }
 }
