@@ -12,6 +12,9 @@ namespace TattooFlash.Web.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Models.Tag>()
+                .HasIndex(t => t.NormalizedName)
+                .IsUnique();
             modelBuilder.Entity<Models.DesignModel>()
                 .HasMany(d => d.Tags)
                 .WithMany(t => t.Designs)
