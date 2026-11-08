@@ -44,6 +44,32 @@ docker compose -f docker-compose.yml -f docker-compose.override.yml stop postgre
 This leaves the existing local database volume intact. The app will use the NAS
 once its user-secret connection string is updated and the app restarted.
 
+## Data protection keys in Docker and Windows
+
+The Dockerfile sets `DataProtection__KeysPath=/var/lib/tattooflash/keys` in its
+base stage, covering Visual Studio fast mode and published images. Compose mounts
+the existing `dataprotection_keys` volume there, preserving keys across container
+replacements. The directory permissions and application name (`TattooFlash`)
+remain unchanged.
+
+When running `TattooFlash.Web` directly on Windows with the `https` or `http`
+launch profile, leave `DataProtection:KeysPath` unset. ASP.NET Core uses its
+default user-profile key storage, normally
+`%LOCALAPPDATA%\ASP.NET\DataProtection-Keys`, and encrypts keys with Windows DPAPI.
+The NAS connection string and other development user secrets are still required.
+For HTTPS, trust the ASP.NET development certificate with
+`dotnet dev-certs https --trust`; the Caddy certificate is only used through Docker.
+
+You can override the storage directory using `DataProtection:KeysPath` in
+configuration or `DataProtection__KeysPath` as an environment variable. An explicit
+directory disables ASP.NET Core's automatic encryption at rest; Windows development
+should normally keep the default. Windows and Docker use separate key rings, so
+switching between them can require signing in again.
+
+To verify persistence, sign in, restart the app in the same mode, and confirm that
+the existing authentication cookie still works. For Docker, also recreate the app
+container while retaining its named volume and repeat the check.
+
 ## Apply EF migrations to the shared NAS development database
 
 Both development machines now share schema and data. Coordinate schema changes

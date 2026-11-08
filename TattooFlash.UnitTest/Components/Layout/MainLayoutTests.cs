@@ -84,7 +84,7 @@ public class MainLayoutTests
         var head = context.Render<HeadOutlet>();
 
         // Assert
-        Assert.Contains("Unit test title", head.Find("title").TextContent) ;
+        Assert.Contains("Unit test title", head.Find("title").TextContent);
 
     }
 

@@ -89,9 +89,15 @@ builder.Services.AddRazorComponents()
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo("/var/lib/tattooflash/keys"))
+var dataProtection = builder.Services.AddDataProtection()
     .SetApplicationName("TattooFlash");
+
+// Use platform defaults locally; containers configure their persistent volume path.
+var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+}
 
 var app = builder.Build();
 

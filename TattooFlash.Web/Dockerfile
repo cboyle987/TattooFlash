@@ -2,6 +2,7 @@
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS base
+ENV DataProtection__KeysPath=/var/lib/tattooflash/keys
 RUN mkdir -p  /var/lib/tattooflash/keys \
 	&& chown "$APP_UID" /var/lib/tattooflash/keys  \
 	&& chmod 700 /var/lib/tattooflash/keys
