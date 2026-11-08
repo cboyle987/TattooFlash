@@ -28,8 +28,11 @@ public class DesignTagRelationshipTests : IAsyncLifetime
         // Arrange
         var design = new DesignModel
         {
-            Id = Guid.NewGuid(), Name = "Rose", Price = 120,
-            ImageName = "rose.webp", IsAvailable = true,
+            Id = Guid.NewGuid(),
+            Name = "Rose",
+            Price = 120,
+            ImageName = "rose.webp",
+            IsAvailable = true,
             Created = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc),
             Updated = new DateTime(2026, 1, 2, 0, 0, 0, DateTimeKind.Utc)
         };
