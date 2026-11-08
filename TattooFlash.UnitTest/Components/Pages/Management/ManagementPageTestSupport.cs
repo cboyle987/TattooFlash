@@ -57,7 +57,7 @@ internal static class ManagementPageTestSupport
     {
         if (error is null)
         {
-            Assert.Equal("http://localhost/management", navigation.Uri);
+            Assert.Equal("http://localhost/management/design", navigation.Uri);
             Assert.Empty(page.FindComponents<MudAlert>());
         }
         else

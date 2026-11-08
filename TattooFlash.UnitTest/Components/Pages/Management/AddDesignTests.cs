@@ -5,12 +5,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
 using TattooFlash.Web.Components.Designs;
-using TattooFlash.Web.Components.Pages.Management;
 using TattooFlash.Web.Enums;
 using TattooFlash.Web.Models;
 using TattooFlash.Web.Interfaces;
 
 using static TattooFlash.UnitTest.Components.Pages.Management.ManagementPageTestSupport;
+using TattooFlash.Web.Components.Pages.Management.Design;
 
 namespace TattooFlash.UnitTest.Components.Pages.Management;
 
@@ -135,7 +135,7 @@ public class AddDesignTests
 
         // Assert
         Assert.Empty(page.FindComponents<MudAlert>());
-        Assert.Equal("http://localhost/management", context.Services.GetRequiredService<NavigationManager>().Uri);
+        Assert.Equal("http://localhost/management/design", context.Services.GetRequiredService<NavigationManager>().Uri);
         service.Verify(x => x.CreateDesignAsync(design, It.IsAny<Stream>()), Times.Exactly(2));
     }
 }

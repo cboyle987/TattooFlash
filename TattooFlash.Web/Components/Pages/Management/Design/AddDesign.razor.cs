@@ -6,7 +6,7 @@ using TattooFlash.Web.Helpers;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
 
-namespace TattooFlash.Web.Components.Pages.Management
+namespace TattooFlash.Web.Components.Pages.Management.Design
 {
 
     public partial class AddDesign
@@ -58,7 +58,7 @@ namespace TattooFlash.Web.Components.Pages.Management
                     return;
                 }
 
-                NavigationManager.NavigateTo("/management");
+                NavigationManager.NavigateTo("/management/design");
 
             }
             catch (Exception ex)

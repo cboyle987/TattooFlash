@@ -68,6 +68,8 @@ builder.Services.AddMudServices(options =>
 // Register app services 
 builder.Services.AddScoped<IDesignRepository, DesignRepository>();
 builder.Services.AddScoped<IDesignService, DesignService>();
+builder.Services.AddScoped<ITagRepository, TagRepository>();
+builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IImageService, CloudflareImageService>();
 builder.Services.AddScoped<IImageProcessingService, ImageProcessingService>();
 

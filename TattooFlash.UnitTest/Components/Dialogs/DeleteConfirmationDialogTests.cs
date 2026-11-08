@@ -22,7 +22,7 @@ public class DeleteConfirmationDialogTests
         // Assert
         provider.WaitForAssertion(() =>
         {
-            Assert.Same(design, provider.FindComponent<DeleteConfirmationDialog>().Instance.Design);
+            Assert.Equal(name, provider.FindComponent<DeleteConfirmationDialog>().Instance.Name);
             Assert.Contains($"Are you sure you want to delete {name}? This action cannot be undone.",
                 provider.Find("[role='dialog']").TextContent);
             Assert.Empty(provider.FindAll("script"));
@@ -83,7 +83,7 @@ public class DeleteConfirmationDialogTests
         context.Render<MudPopoverProvider>();
         var provider = context.Render<MudDialogProvider>();
         var dialogs = context.Services.GetRequiredService<IDialogService>();
-        var parameters = new DialogParameters<DeleteConfirmationDialog> { { x => x.Design, design } };
+        var parameters = new DialogParameters<DeleteConfirmationDialog> { { x => x.Name, design.Name } };
         IDialogReference? reference = null;
         await provider.InvokeAsync(async () => reference = await dialogs.ShowAsync<DeleteConfirmationDialog>("Confirm Delete", parameters));
         Assert.NotNull(reference);

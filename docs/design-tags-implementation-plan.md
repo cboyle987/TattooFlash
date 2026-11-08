@@ -1,8 +1,12 @@
 # Design tags: staged implementation plan
 
-Status: agreed feature plan; not implemented. The owner will implement the stories
-with hint-first guidance and review. This document does not authorise an agent to
-implement the feature automatically.
+Status: implementation in progress. Tag entities, relationship configuration,
+migrations, repository and service layer are implemented with automated tests.
+Tag add/edit pages and their shared input form are implemented and linked from
+the management list. Design assignment and homepage filtering remain planned.
+The owner implements the stories with hint-first guidance and review, and may
+explicitly delegate individual implementation tasks. This document does not
+authorise an agent to implement the remaining feature automatically.
 
 ## Summary and agreed behaviour
 

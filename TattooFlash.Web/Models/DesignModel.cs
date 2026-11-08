@@ -12,7 +12,7 @@ namespace TattooFlash.Web.Models
         public DateTime Created { get; set; }
         public DateTime Updated { get; set; }
 
-        public List<Tag> Tags { get; set; } = [];
+        public List<TagModel> Tags { get; set; } = [];
 
 
     }

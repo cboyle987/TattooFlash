@@ -3,7 +3,7 @@ using TattooFlash.Web.Helpers;
 
 namespace TattooFlash.Web.Models
 {
-    public class Tag
+    public class TagModel
     {
         public Guid Id { get; set; }
 

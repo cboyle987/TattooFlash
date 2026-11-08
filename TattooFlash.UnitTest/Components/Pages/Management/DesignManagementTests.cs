@@ -6,7 +6,7 @@ using Moq;
 using MudBlazor;
 using MudBlazor.Extensions;
 using TattooFlash.Web.Components.Designs;
-using TattooFlash.Web.Components.Pages.Management;
+using TattooFlash.Web.Components.Pages.Management.Design;
 using TattooFlash.Web.Components.Placeholders;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
@@ -43,10 +43,10 @@ public class DesignManagementTests
         // Assert
         page.WaitForAssertion(() =>
         {
-            Assert.Empty(page.FindComponents<SkeletonDesignManagementItem>());
+            Assert.Empty(page.FindComponents<SkeletonManagementItem>());
             Assert.Empty(page.FindComponents<MudAlert>());
             Assert.Equal(designs.Select(x => x.Id), page.FindComponents<DesignManagementItem>().Select(x => x.Instance.Design.Id));
-            Assert.Equal("/management/add-design", page.Find("a").GetAttribute("href"));
+            Assert.Equal("/management/design/add", page.Find("a").GetAttribute("href"));
             if (totalItems > 2)
             {
                 var pagination = page.FindComponent<MudPagination>();
@@ -91,7 +91,7 @@ public class DesignManagementTests
         {
             Assert.Same(second, page.FindComponent<DesignManagementItem>().Instance.Design);
             Assert.Equal(2, page.FindComponent<MudPagination>().Instance.GetState(x => x.Selected));
-            Assert.Empty(page.FindComponents<SkeletonDesignManagementItem>());
+            Assert.Empty(page.FindComponents<SkeletonManagementItem>());
         });
         service.Verify(x => x.GetPaginatedDesigns(2), Times.Once);
     }
@@ -107,7 +107,7 @@ public class DesignManagementTests
         await using var context = CreateContext(service);
         var page = context.RenderWithProviders<DesignManagement>();
         Assert.Contains("There has been an error loading designs please try again later", page.FindComponent<MudAlert>().Markup);
-        Assert.Empty(page.FindComponents<SkeletonDesignManagementItem>());
+        Assert.Empty(page.FindComponents<SkeletonManagementItem>());
         Assert.Empty(page.FindComponents<DesignManagementItem>());
         Assert.Empty(page.FindComponents<MudPagination>());
 
@@ -118,7 +118,7 @@ public class DesignManagementTests
 
         // Assert
         Assert.Empty(page.FindComponents<MudAlert>());
-        Assert.Equal("/management/add-design", page.Find("a").GetAttribute("href"));
+        Assert.Equal("/management/design/add", page.Find("a").GetAttribute("href"));
         service.Verify(x => x.GetPaginatedDesigns(1), Times.Exactly(2));
     }
 
@@ -198,7 +198,7 @@ public class DesignManagementTests
 
     private static void AssertLoading(IRenderedComponent<DesignManagement> page)
     {
-        Assert.Equal(4, page.FindComponents<SkeletonDesignManagementItem>().Count);
+        Assert.Equal(4, page.FindComponents<SkeletonManagementItem>().Count);
         Assert.Empty(page.FindComponents<DesignManagementItem>());
     }
 }

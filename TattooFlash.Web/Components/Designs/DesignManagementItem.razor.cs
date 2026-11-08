@@ -31,7 +31,7 @@ namespace TattooFlash.Web.Components.Designs
 
         private void EditDesign()
         {
-            NavigationManager.NavigateTo($"/management/edit-design/{Design.Id.ToString()}");
+            NavigationManager.NavigateTo($"/management/design/edit/{Design.Id.ToString()}");
         }
 
         private async Task DeleteDesign()
@@ -44,7 +44,7 @@ namespace TattooFlash.Web.Components.Designs
             {
                 var dialogParameters = new DialogParameters
             {
-                { "Design", Design }
+                { "Name", Design.Name }
             };
                 var confirmDialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Confirm Delete", dialogParameters);
                 var confirmation = await confirmDialog.Result;

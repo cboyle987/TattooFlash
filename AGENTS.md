@@ -81,7 +81,9 @@ and access to PostgreSQL. Use .NET user secrets or environment variables for cre
 - Service unit tests live in `TattooFlash.UnitTest/Services/` and use xUnit and Moq.
   Blazor component tests live in `TattooFlash.UnitTest/Components/` and use bUnit.
   Test folders and namespaces mirror the corresponding application folders, such
-  as `Components/Designs/` and `Components/Dialogs/`. Shared component test
+  as `Components/Designs/`, `Components/Tags/`, and `Components/Dialogs/`.
+  Tag management page tests live in `Components/Pages/Management/Tags/`.
+  Shared component test
   infrastructure remains in the test project's `Components/` root.
   Create a fresh `ComponentTestContext` per test with `await using`, register mocks
   before rendering, and use `RenderWithProviders<TComponent>` for MudBlazor providers.

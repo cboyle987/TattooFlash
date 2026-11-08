@@ -7,7 +7,7 @@ using MudBlazor;
 using TattooFlash.Web.Components.Designs;
 using TattooFlash.Web.Components.Dialogs;
 using TattooFlash.Web.Components.Layout;
-using TattooFlash.Web.Components.Pages.Management;
+using TattooFlash.Web.Components.Pages.Management.Design;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
 

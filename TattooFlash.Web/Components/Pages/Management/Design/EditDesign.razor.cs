@@ -3,7 +3,7 @@ using TattooFlash.Web.Helpers;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
 
-namespace TattooFlash.Web.Components.Pages.Management
+namespace TattooFlash.Web.Components.Pages.Management.Design
 {
     public partial class EditDesign
     {
@@ -85,7 +85,7 @@ namespace TattooFlash.Web.Components.Pages.Management
                     await DesignService.UpdateDesignAsync(DesignId, submission.Design, null);
 
                 }
-                NavigationManager.NavigateTo("/management");
+                NavigationManager.NavigateTo("/management/design");
 
             }
             catch (Exception ex)

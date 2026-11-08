@@ -89,7 +89,7 @@ namespace TattooFlash.Web.Migrations
                     b.HasIndex("NormalizedName")
                         .IsUnique();
 
-                    b.ToTable("Tag");
+                    b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("DesignModelTag", b =>

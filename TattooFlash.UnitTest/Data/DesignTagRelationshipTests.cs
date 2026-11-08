@@ -61,8 +61,8 @@ public class DesignTagRelationshipTests : IAsyncLifetime
     public async Task SaveDesigns_WithSharedAndMultipleTags_RoundTripsBothSidesAndDisplaySpelling()
     {
         // Arrange
-        var shared = new Tag { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
-        var other = new Tag { DispalyName = "Japanese", NormalizedName = "JAPANESE" };
+        var shared = new TagModel { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
+        var other = new TagModel { DispalyName = "Japanese", NormalizedName = "JAPANESE" };
         var rose = new DesignModel { Name = "Rose", Tags = [shared, other] };
         var anchor = new DesignModel { Name = "Anchor", Tags = [shared] };
 
@@ -81,7 +81,7 @@ public class DesignTagRelationshipTests : IAsyncLifetime
         Assert.Contains(storedRose.Tags, t => t.Id == shared.Id);
         Assert.Contains(storedRose.Tags, t => t.Id == other.Id);
 
-        var storedShared = await verification.Set<Tag>().AsNoTracking().Include(t => t.Designs)
+        var storedShared = await verification.Set<TagModel>().AsNoTracking().Include(t => t.Designs)
             .SingleAsync(t => t.Id == shared.Id);
         Assert.NotEqual(Guid.Empty, storedShared.Id);
         Assert.Equal("Old School", storedShared.DispalyName);
@@ -89,15 +89,15 @@ public class DesignTagRelationshipTests : IAsyncLifetime
         Assert.Equal(2, storedShared.Designs.Count);
         Assert.Contains(storedShared.Designs, d => d.Id == rose.Id);
         Assert.Contains(storedShared.Designs, d => d.Id == anchor.Id);
-        Assert.Equal(2, await verification.Set<Tag>().CountAsync());
+        Assert.Equal(2, await verification.Set<TagModel>().CountAsync());
     }
 
     [Fact]
     public async Task DeleteTag_RemovesOnlyItsAssignmentsAndPreservesDesignsAndOtherTags()
     {
         // Arrange
-        var removed = new Tag { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
-        var retained = new Tag { DispalyName = "Flowers", NormalizedName = "FLOWERS" };
+        var removed = new TagModel { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
+        var retained = new TagModel { DispalyName = "Flowers", NormalizedName = "FLOWERS" };
         var rose = new DesignModel { Name = "Rose", Tags = [removed, retained] };
         var anchor = new DesignModel { Name = "Anchor", Tags = [removed] };
         await using (var context = new AppDbContext(_options))
@@ -108,12 +108,12 @@ public class DesignTagRelationshipTests : IAsyncLifetime
 
         // Act: no relationships are loaded, so the database must perform the cascade.
         await using (var context = new AppDbContext(_options))
-            await context.Set<Tag>().Where(t => t.Id == removed.Id).ExecuteDeleteAsync();
+            await context.Set<TagModel>().Where(t => t.Id == removed.Id).ExecuteDeleteAsync();
 
         // Assert
         await using var verification = new AppDbContext(_options);
         Assert.Equal(2, await verification.Designs.CountAsync());
-        Assert.Equal(retained.Id, (await verification.Set<Tag>().SingleAsync()).Id);
+        Assert.Equal(retained.Id, (await verification.Set<TagModel>().SingleAsync()).Id);
         var storedRose = await verification.Designs.Include(d => d.Tags).SingleAsync(d => d.Id == rose.Id);
         var storedAnchor = await verification.Designs.Include(d => d.Tags).SingleAsync(d => d.Id == anchor.Id);
         Assert.Equal(retained.Id, Assert.Single(storedRose.Tags).Id);
@@ -125,8 +125,8 @@ public class DesignTagRelationshipTests : IAsyncLifetime
     public async Task DeleteDesign_RemovesOnlyItsAssignmentsAndPreservesSharedAndUnusedTags()
     {
         // Arrange
-        var shared = new Tag { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
-        var exclusive = new Tag { DispalyName = "Flowers", NormalizedName = "FLOWERS" };
+        var shared = new TagModel { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
+        var exclusive = new TagModel { DispalyName = "Flowers", NormalizedName = "FLOWERS" };
         var rose = new DesignModel { Name = "Rose", Tags = [shared, exclusive] };
         var anchor = new DesignModel { Name = "Anchor", Tags = [shared] };
         await using (var context = new AppDbContext(_options))
@@ -141,11 +141,11 @@ public class DesignTagRelationshipTests : IAsyncLifetime
 
         // Assert
         await using var verification = new AppDbContext(_options);
-        Assert.Equal(2, await verification.Set<Tag>().CountAsync());
+        Assert.Equal(2, await verification.Set<TagModel>().CountAsync());
         var remaining = await verification.Designs.Include(d => d.Tags).SingleAsync();
         Assert.Equal(anchor.Id, remaining.Id);
         Assert.Equal(shared.Id, Assert.Single(remaining.Tags).Id);
-        var unused = await verification.Set<Tag>().Include(t => t.Designs).SingleAsync(t => t.Id == exclusive.Id);
+        var unused = await verification.Set<TagModel>().Include(t => t.Designs).SingleAsync(t => t.Id == exclusive.Id);
         Assert.Empty(unused.Designs);
         Assert.Equal(1L, await CountAssignmentsAsync(verification));
     }
@@ -154,7 +154,7 @@ public class DesignTagRelationshipTests : IAsyncLifetime
     public async Task RemoveAssignment_PreservesBothParentsAndOtherAssignments()
     {
         // Arrange
-        var tag = new Tag { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
+        var tag = new TagModel { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
         var rose = new DesignModel { Name = "Rose", Tags = [tag] };
         var anchor = new DesignModel { Name = "Anchor", Tags = [tag] };
         await using (var context = new AppDbContext(_options))
@@ -174,7 +174,7 @@ public class DesignTagRelationshipTests : IAsyncLifetime
         // Assert
         await using var verification = new AppDbContext(_options);
         Assert.Equal(2, await verification.Designs.CountAsync());
-        var storedTag = await verification.Set<Tag>().Include(t => t.Designs).SingleAsync();
+        var storedTag = await verification.Set<TagModel>().Include(t => t.Designs).SingleAsync();
         Assert.Equal(tag.Id, storedTag.Id);
         Assert.Equal(anchor.Id, Assert.Single(storedTag.Designs).Id);
         Assert.Equal(1L, await CountAssignmentsAsync(verification));
@@ -186,14 +186,14 @@ public class DesignTagRelationshipTests : IAsyncLifetime
         // Arrange
         await using (var context = new AppDbContext(_options))
         {
-            context.Add(new Tag { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" });
+            context.Add(new TagModel { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" });
             await context.SaveChangesAsync();
         }
 
         // Act
         await using (var context = new AppDbContext(_options))
         {
-            context.Add(new Tag { DispalyName = "old school", NormalizedName = "OLD SCHOOL" });
+            context.Add(new TagModel { DispalyName = "old school", NormalizedName = "OLD SCHOOL" });
             var exception = await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync());
 
             // Assert: SQLite extended error 2067 means UNIQUE constraint failed.
@@ -201,14 +201,14 @@ public class DesignTagRelationshipTests : IAsyncLifetime
         }
 
         await using var verification = new AppDbContext(_options);
-        Assert.Equal("Old School", (await verification.Set<Tag>().SingleAsync()).DispalyName);
+        Assert.Equal("Old School", (await verification.Set<TagModel>().SingleAsync()).DispalyName);
     }
 
     [Fact]
     public async Task InsertDuplicateAssignment_IsRejectedByTheDatabase()
     {
         // Arrange
-        var tag = new Tag { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
+        var tag = new TagModel { DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
         var design = new DesignModel { Name = "Rose", Tags = [tag] };
         await using (var context = new AppDbContext(_options))
         {

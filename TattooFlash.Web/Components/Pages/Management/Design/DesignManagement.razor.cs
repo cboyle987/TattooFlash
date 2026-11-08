@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
 
-namespace TattooFlash.Web.Components.Pages.Management
+namespace TattooFlash.Web.Components.Pages.Management.Design
 {
     public partial class DesignManagement
     {

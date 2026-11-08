@@ -1,0 +1,23 @@
+<MudForm Class="pa-4" @ref="_form">
+    <MudGrid>
+        <MudItem xs="12">
+            <MudTextField T="string" Label="Tag Name" @bind-Value="Tag.DispalyName"
+                          Required="true" RequiredError="Tag name is required."
+                          Validation="@(new Func<string, string?>(ValidateName))"
+                          Disabled="_isSaving" />
+        </MudItem>
+        <MudItem xs="12" Class="d-flex justify-center">
+            <MudButton Disabled="_isSaving" Variant="Variant.Filled" Color="Color.Success" OnClick="HandleSubmit">
+                @if (_isSaving)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Saving</MudText>
+                }
+                else
+                {
+                    <MudText>@(Tag.Id == Guid.Empty ? "Create" : "Update")</MudText>
+                }
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudForm>

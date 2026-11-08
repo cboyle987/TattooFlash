@@ -1,37 +1,32 @@
-@page "/management/edit-design/{DesignId:guid}"
-@using TattooFlash.Web.Components.Designs
+@page "/management/tag/edit/{TagId:guid}"
+@using TattooFlash.Web.Components.Tags
 @attribute [Authorize]
-
 
 <MudContainer>
     <MudPaper Class="my-3">
         @if (_isLoading)
         {
             <MudProgressCircular Indeterminate />
-        } else
+        }
+        else
         {
-
             <MudGrid>
-                <MudItem xs="12" class="d-flex justify-center">
-                    <MudText Typo="Typo.h3">Edit Design</MudText>
+                <MudItem xs="12" Class="d-flex justify-center">
+                    <MudText Typo="Typo.h3">Edit Tag</MudText>
                 </MudItem>
             </MudGrid>
             @if (!string.IsNullOrEmpty(_loadError))
             {
-              
-                <MudAlert class="mx-5" Severity="Severity.Error">@_loadError</MudAlert>
-            } else
+                <MudAlert Class="mx-5" Severity="Severity.Error">@_loadError</MudAlert>
+            }
+            else if (Tag is not null)
             {
                 @if (!string.IsNullOrEmpty(_saveError))
                 {
                     <MudAlert Severity="Severity.Error">@_saveError</MudAlert>
                 }
-
-                <DesignInput Design="Design" OnValidSubmit="UpdateDesign" />
-            }       
+                <TagInput @key="Tag.Id" Tag="Tag" OnValidSubmit="UpdateTag" />
+            }
         }
-
-        
     </MudPaper>
-
 </MudContainer>

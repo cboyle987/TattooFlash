@@ -8,11 +8,12 @@ namespace TattooFlash.Web.Data
         {
         }
         public DbSet<Models.DesignModel> Designs { get; set; }
+        public DbSet<Models.TagModel> Tags { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<Models.Tag>()
+            modelBuilder.Entity<Models.TagModel>()
                 .HasIndex(t => t.NormalizedName)
                 .IsUnique();
             modelBuilder.Entity<Models.DesignModel>()

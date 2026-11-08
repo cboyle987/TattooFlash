@@ -1,7 +1,7 @@
 using Bunit;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using TattooFlash.Web.Components.Pages.Management;
+using TattooFlash.Web.Components.Pages.Management.Design;
 using TattooFlash.Web.Interfaces;
 
 namespace TattooFlash.UnitTest.Components;
