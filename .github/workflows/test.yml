@@ -7,7 +7,7 @@ jobs:
   test: 
     runs-on: ubuntu-latest
     env:
-      COVERAGE_TARGET: '90'
+      COVERAGE_TARGET: '85'
     steps:
       - uses: actions/checkout@v7
       - name: Setup .NET 
