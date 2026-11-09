@@ -1,9 +1,9 @@
 # Shared VPS Compose layout
 
 The new Compose files prepare staging and production to share a single VPS.
-`scripts/Deploy.sh` supports this layout. The workflow deploys staging using the
-new script; production deployment automation is deferred until staging has been
-tested. The existing staging setup guides describe the older server layout.
+`scripts/Deploy.sh` supports this layout. The release workflow deploys staging;
+a separate manually triggered workflow promotes a tested release to production.
+The existing staging setup guides describe the older server layout.
 
 ## Files
 
@@ -64,7 +64,8 @@ sudo /usr/local/sbin/tattooflash-deploy production 0.2.0
 ```
 
 These are separate real deployments, each with a maintenance window. Production
-approval will be enforced by the GitHub environment, not by this server script.
+promotion is an explicit manual workflow dispatch, not an independent reviewer
+approval. The server script itself does not enforce GitHub approval or staging checks.
 
 | Path | Purpose |
 | --- | --- |
@@ -103,7 +104,7 @@ The existing tag-triggered test and publishing jobs are unchanged. The staging
 job retains its GitHub environment, SSH settings, and concurrency group. It now
 checks sudo access for `tattooflash-deploy staging VERSION`, creates the incoming
 staging directory as `deploy`, uploads the bundle with an `.upload` suffix, renames
-it after transfer, and invokes that same command. There is no production job.
+it after transfer, and invokes that same command. Production is in a separate workflow.
 
 The workflow does not install scripts, Compose files, or Caddy configuration.
 Before pushing a new version tag, complete the server transition above and ensure
@@ -111,6 +112,60 @@ the new staging PostgreSQL service is healthy. A successful run should produce a
 backup under `/var/backups/tattooflash/staging/` and pass the staging HTTPS check.
 Then check login and app features manually; also verify shared Caddy remains up.
 Manual workflow dispatch still runs tests only and does not deploy.
+
+## Production promotion
+
+The [Deploy production workflow](../.github/workflows/deploy-production.yml) is
+manually triggered. It does not rebuild or publish the application. Configure the
+GitHub `production` environment with:
+
+| Type | Name | Value |
+| --- | --- | --- |
+| Secret | `PRODUCTION_SSH_PRIVATE_KEY` | Dedicated automation private key, or the existing shared deploy key |
+| Variable | `PRODUCTION_HOST` | Shared VPS address |
+| Variable | `PRODUCTION_USER` | `deploy` |
+| Variable | `PRODUCTION_KNOWN_HOSTS` | Verified complete ED25519 known-host entry for that address |
+
+The VPS needs production's protected Compose file and `production.env`, a healthy
+production PostgreSQL service, and the installed `Deploy.sh`. Shared Caddy must
+be running; production DNS and Auth0 callback/logout URLs must use
+`https://www.emmamccormicktattoo.com`. Use `sudo vi` for server file edits.
+
+To promote a release:
+
+1. Merge/push the production workflow onto the repository's default branch so its
+   manual trigger is available in Actions.
+2. Confirm the version's staging release workflow completed successfully and
+   manually check staging's features.
+3. Open **Actions → Deploy production → Run workflow**, select the default branch,
+   and enter the tested version without `v`, such as `0.2.0`.
+4. Review the selected version before clicking **Run workflow**. This authorizes a
+   real production deployment, including database migrations.
+
+The workflow validates stable SemVer and default-branch execution, resolves the
+release tag's current commit, and finds a successful `deploy.yml` push run for that
+exact tag and commit. It explicitly checks that `deploy-staging` succeeded, then
+downloads `migrations-VERSION` from that run. Missing or expired artifacts stop
+deployment before SSH setup. Artifacts currently expire after seven days: promote
+within that window. Do not overwrite published tags/images or rerun publication
+to recover an expired bundle; that requires a separately reviewed recovery path.
+
+It uploads to `/home/deploy/tattooflash/production/`, checks sudo access, and runs
+`tattooflash-deploy production VERSION`. Production jobs share a concurrency group
+and do not cancel a running deployment. Check completion and selected versions
+before dispatching another run: neither this workflow nor the script prevents
+deploying an older version. Staging success is historical evidence for the release,
+not a check that it is still the current staging version.
+
+No required-reviewer gate is configured. Manual dispatch is the promotion decision;
+repository users with workflow execution permissions can initiate it. The
+`production` environment supplies credentials and deployment history, plus any
+protection rules available and configured separately.
+
+After success, check the production homepage, login/logout, designs, and an
+authenticated operation. Verify staging remains available. The automated HTTP
+200 check alone does not validate those features. Failed migrations have no
+automatic rollback; investigate before retrying or restoring.
 
 ## Validation
 

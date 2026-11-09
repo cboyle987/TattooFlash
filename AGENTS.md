@@ -113,7 +113,7 @@ and access to PostgreSQL. Use .NET user secrets or environment variables for cre
 ## Reference documents
 
 - `docs/shared-vps-compose.md`: new shared-VPS Compose layout and transition
-  prerequisites; the pipeline deploys staging only using the new script.
+  prerequisites, automatic staging deployment, and manual production promotion.
 - `docs/container-development.md`: current container development setup and usage of
   `scripts/Trust-CaddyLocalCertificate.ps1` for Windows certificate trust.
 - `docs/manual-staging-deployment.md`: manual GHCR build, migration bundle, and
