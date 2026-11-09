@@ -134,23 +134,25 @@ jobs:
           [[ "$RELEASE_VERSION" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
           test -f "artifacts/efbundle-$RELEASE_VERSION"
           ssh -T staging \
-            "sudo -n -l /usr/local/sbin/tattooflash-deploy $RELEASE_VERSION"
+            "sudo -n -l /usr/local/sbin/tattooflash-deploy staging $RELEASE_VERSION"
       - name: Upload migration bundle
         env:
           RELEASE_VERSION: ${{ needs.build-and-push.outputs.version }}
         run: |
+          ssh -T staging "install -d -m 700 /home/deploy/tattooflash/staging"
+
           scp "artifacts/efbundle-$RELEASE_VERSION" \
-            "staging:/home/deploy/tattooflash/efbundle-$RELEASE_VERSION.upload"
+            "staging:/home/deploy/tattooflash/staging/efbundle-$RELEASE_VERSION.upload"
 
           ssh -T staging \
-            "mv /home/deploy/tattooflash/efbundle-$RELEASE_VERSION.upload /home/deploy/tattooflash/efbundle-$RELEASE_VERSION"
+            "mv /home/deploy/tattooflash/staging/efbundle-$RELEASE_VERSION.upload /home/deploy/tattooflash/staging/efbundle-$RELEASE_VERSION"
 
       - name: Deploy staging
         env:
           RELEASE_VERSION: ${{ needs.build-and-push.outputs.version }}
         run: |
           ssh -T staging \
-            "sudo -n /usr/local/sbin/tattooflash-deploy $RELEASE_VERSION"
+            "sudo -n /usr/local/sbin/tattooflash-deploy staging $RELEASE_VERSION"
 
       - name: Remove SSH credentials
         if: always()

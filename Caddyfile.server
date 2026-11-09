@@ -1,0 +1,7 @@
+tattoo-flash-staging.connorboyle.dev {
+    reverse_proxy staging-web:8080
+}
+
+www.emmamccormicktattoo.com {
+    reverse_proxy production-web:8080
+}

@@ -159,3 +159,9 @@ copies and verify restoration separately.
 For host-key errors, GHCR permissions, failed migrations, reruns, and rollback
 considerations, see [CI/CD recovery](github-actions-staging-deployment.md#verification-and-recovery).
 Never delete named volumes or run Down migrations as an automatic recovery step.
+# Transition notice
+
+This guide describes the previous staging-only setup. The replacement deployment
+script is `scripts/Deploy.sh` and requires `ENVIRONMENT VERSION`. See
+[Shared VPS layout](shared-vps-compose.md) before using these historical commands.
+

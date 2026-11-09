@@ -1,5 +1,8 @@
 # One-time staging environment setup
 
+> This guide describes the previous staging-only setup. For the new Compose
+> projects, paths, and deployment command, see [Shared VPS layout](shared-vps-compose.md).
+
 This document records the one-time server, registry, and external-service setup
 for TattooFlash staging on an IONOS Ubuntu 24.04 Linux x64 VPS.
 
