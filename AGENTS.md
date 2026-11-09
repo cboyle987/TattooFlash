@@ -44,7 +44,7 @@ owner's behalf.
 - `TattooFlash.Web/wwwroot/samples/`: current local design images.
 - `docs/`: reference material and proposed feature designs.
 - `scripts/`: development helpers, including trusting Caddy's local CA on Windows.
-  `DeployStaging.sh` is the source for the separately installed, root-owned VPS
+  `Deploy.sh` is the source for the separately installed, root-owned VPS
   deployment command; workflow runs do not update that installed copy.
 
 ## Implementation conventions
@@ -112,6 +112,8 @@ and access to PostgreSQL. Use .NET user secrets or environment variables for cre
 
 ## Reference documents
 
+- `docs/shared-vps-compose.md`: new shared-VPS Compose layout and transition
+  prerequisites; the pipeline deploys staging only using the new script.
 - `docs/container-development.md`: current container development setup and usage of
   `scripts/Trust-CaddyLocalCertificate.ps1` for Windows certificate trust.
 - `docs/manual-staging-deployment.md`: manual GHCR build, migration bundle, and

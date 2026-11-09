@@ -1,0 +1,33 @@
+# Start this standalone project before either application stack.
+name: tattooflash-proxy
+
+services:
+  caddy:
+    image: caddy:2.11.7
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.server:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - staging
+      - production
+    restart: unless-stopped
+
+networks:
+  staging:
+    name: tattooflash-staging-proxy
+    ipam:
+      config:
+        - subnet: 172.30.10.0/24
+  production:
+    name: tattooflash-production-proxy
+    ipam:
+      config:
+        - subnet: 172.30.12.0/24
+
+volumes:
+  caddy_data:
+  caddy_config:
