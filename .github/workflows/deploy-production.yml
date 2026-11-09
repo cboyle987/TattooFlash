@@ -40,7 +40,7 @@ jobs:
             }
             const tag = `v${version}`;
             const { data: commit } = await github.rest.repos.getCommit({
-              ...context.repo, ref: `tags/${tag}`
+              ...context.repo, ref: tag
             });
             const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
               ...context.repo, workflow_id: 'deploy.yml', event: 'push',
