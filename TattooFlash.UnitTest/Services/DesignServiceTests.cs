@@ -95,10 +95,10 @@ public class DesignServiceTests
         ArrangeUpload(source, processed);
         if (update)
         {
-            _repository.Setup(x => x.UpdateDesignAsync(design.Id, design))
+            _repository.Setup(x => x.UpdateDesignAsync(design.Id, design, selectedTagIds))
                 .Callback(() => Assert.Equal("new.webp", design.ImageName)).ReturnsAsync(saved);
             _images.Setup(x => x.DeleteImageAsync("old.webp", CancellationToken.None))
-                .Callback(() => _repository.Verify(x => x.UpdateDesignAsync(design.Id, design), Times.Once))
+                .Callback(() => _repository.Verify(x => x.UpdateDesignAsync(design.Id, design, selectedTagIds), Times.Once))
                 .Returns(Task.CompletedTask);
         }
         else
@@ -107,7 +107,7 @@ public class DesignServiceTests
         var sut = CreateService();
 
         // Act
-        var result = update ? await sut.UpdateDesignAsync(design.Id, design, source) : await sut.CreateDesignAsync(design, source, selectedTagIds);
+        var result = update ? await sut.UpdateDesignAsync(design.Id, design, source, selectedTagIds) : await sut.CreateDesignAsync(design, source, selectedTagIds);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -135,7 +135,7 @@ public class DesignServiceTests
         var design = new DesignModel { Id = id, ImageName = "old.webp" };
         var failure = new InvalidOperationException("Save failed");
         ArrangeUpload(source, processed);
-        if (update) _repository.Setup(x => x.UpdateDesignAsync(id, design)).ThrowsAsync(failure);
+        if (update) _repository.Setup(x => x.UpdateDesignAsync(id, design, Array.Empty<Guid>())).ThrowsAsync(failure);
         else _repository.Setup(x => x.CreateDesignAsync(design, It.IsAny<IReadOnlyCollection<Guid>>())).ThrowsAsync(failure);
         var cleanup = _images.Setup(x => x.DeleteImageAsync("new.webp", CancellationToken.None));
         if (cleanupFails) cleanup.ThrowsAsync(new IOException("Cleanup failed"));
@@ -144,7 +144,7 @@ public class DesignServiceTests
 
         // Act
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => update
-            ? sut.UpdateDesignAsync(id, design, source) : sut.CreateDesignAsync(design, source, Array.Empty<Guid>()));
+            ? sut.UpdateDesignAsync(id, design, source, Array.Empty<Guid>()) : sut.CreateDesignAsync(design, source, Array.Empty<Guid>()));
 
         // Assert
         Assert.Same(failure, exception);
@@ -179,7 +179,7 @@ public class DesignServiceTests
 
         // Act
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => update
-            ? sut.UpdateDesignAsync(id, design, source) : sut.CreateDesignAsync(design, source, Array.Empty<Guid>()));
+            ? sut.UpdateDesignAsync(id, design, source, Array.Empty<Guid>()) : sut.CreateDesignAsync(design, source, Array.Empty<Guid>()));
 
         // Assert
         Assert.Same(failure, exception);
@@ -195,18 +195,19 @@ public class DesignServiceTests
     {
         // Arrange
         var id = Guid.NewGuid();
+        var selectedTagIds = new List<Guid> { Guid.NewGuid() };
         var design = new DesignModel { ImageName = "existing.webp" };
-        _repository.Setup(x => x.UpdateDesignAsync(id, design)).ReturnsAsync(design);
+        _repository.Setup(x => x.UpdateDesignAsync(id, design, selectedTagIds)).ReturnsAsync(design);
         var sut = CreateService();
 
         // Act
-        var result = await sut.UpdateDesignAsync(id, design, null);
+        var result = await sut.UpdateDesignAsync(id, design, null, selectedTagIds);
 
         // Assert
         Assert.True(result.IsSuccess);
         Assert.Null(result.ImageError);
         Assert.Same(design, result.Design);
-        _repository.Verify(x => x.UpdateDesignAsync(id, design), Times.Once);
+        _repository.Verify(x => x.UpdateDesignAsync(id, design, selectedTagIds), Times.Once);
         _processor.VerifyNoOtherCalls();
         _images.VerifyNoOtherCalls();
     }
@@ -263,19 +264,19 @@ public class DesignServiceTests
         var id = Guid.NewGuid();
         var design = new DesignModel { Id = id, ImageName = "old.webp" };
         ArrangeUpload(source, processed);
-        _repository.Setup(x => x.UpdateDesignAsync(id, design)).ReturnsAsync(design);
+        _repository.Setup(x => x.UpdateDesignAsync(id, design, Array.Empty<Guid>())).ReturnsAsync(design);
         _images.Setup(x => x.DeleteImageAsync("old.webp", CancellationToken.None)).ThrowsAsync(new IOException("Deletion failed"));
         _images.Setup(x => x.DeleteImageAsync("new.webp", CancellationToken.None)).Returns(Task.CompletedTask);
         var sut = CreateService();
 
         // Act
-        var result = await sut.UpdateDesignAsync(id, design, source);
+        var result = await sut.UpdateDesignAsync(id, design, source, Array.Empty<Guid>());
 
         // Assert
         Assert.True(result.IsSuccess);
         Assert.Null(result.ImageError);
         Assert.Same(design, result.Design);
-        _repository.Verify(x => x.UpdateDesignAsync(id, design), Times.Once);
+        _repository.Verify(x => x.UpdateDesignAsync(id, design, Array.Empty<Guid>()), Times.Once);
         _images.Verify(x => x.DeleteImageAsync("old.webp", CancellationToken.None), Times.Once);
         _images.Verify(x => x.DeleteImageAsync("new.webp", It.IsAny<CancellationToken>()), Times.Never);
         Assert.Equal("new.webp", design.ImageName);
@@ -312,7 +313,7 @@ public class DesignServiceTests
 
         // Act
         var result = update
-            ? await sut.UpdateDesignAsync(id, design, source)
+            ? await sut.UpdateDesignAsync(id, design, source, Array.Empty<Guid>())
             : await sut.CreateDesignAsync(design, source, Array.Empty<Guid>());
 
         // Assert
@@ -339,11 +340,11 @@ public class DesignServiceTests
         var id = Guid.NewGuid();
         var design = new DesignModel { Id = id, ImageName = "old.webp" };
         var failure = new KeyNotFoundException("Design not found");
-        _repository.Setup(x => x.UpdateDesignAsync(id, design)).ThrowsAsync(failure);
+        _repository.Setup(x => x.UpdateDesignAsync(id, design, Array.Empty<Guid>())).ThrowsAsync(failure);
         var sut = CreateService();
 
         // Act
-        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => sut.UpdateDesignAsync(id, design, null));
+        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => sut.UpdateDesignAsync(id, design, null, Array.Empty<Guid>()));
 
         // Assert
         Assert.Same(failure, exception);

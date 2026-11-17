@@ -203,13 +203,20 @@ public class DesignRepositoryTests : IAsyncLifetime
         AssertOperationContextWasDisposed();
     }
 
-    [Fact]
-    public async Task UpdateDesignAsync_UpdatesEditableFieldsAndPreservesStoredIdentityAndCreationTime()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task UpdateDesignAsync_UpdatesEditableFieldsAndTagsAndPreservesStoredIdentityAndCreationTime(bool clearTags)
     {
         // Arrange
         var original = Design("Anchor");
         var untouched = Design("Rose");
+        var previousTag = new TagModel { DisplayName = "Flowers", NormalizedName = "FLOWERS" };
+        var replacementTag = new TagModel { DisplayName = "Traditional", NormalizedName = "TRADITIONAL" };
+        original.Tags = [previousTag];
+        untouched.Tags = [previousTag, replacementTag];
         await SeedAsync(original, untouched);
+        Guid[] selectedTagIds = clearTags ? [] : [replacementTag.Id];
         var submitted = Design("New anchor");
         submitted.Price = 250;
         submitted.ImageName = "replacement.webp";
@@ -219,7 +226,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var before = DateTime.UtcNow;
 
         // Act
-        var result = await sut.UpdateDesignAsync(original.Id, submitted);
+        var result = await sut.UpdateDesignAsync(original.Id, submitted, selectedTagIds);
 
         // Assert
         Assert.Equal(original.Id, result.Id);
@@ -230,9 +237,15 @@ public class DesignRepositoryTests : IAsyncLifetime
         Assert.Equal(submitted.IsAvailable, result.IsAvailable);
         Assert.InRange(result.Updated, before, DateTime.UtcNow);
         Assert.Equal(DateTimeKind.Utc, result.Updated.Kind);
+        Assert.Equal(selectedTagIds, result.Tags.Select(t => t.Id));
         await using var verification = new AppDbContext(_options);
-        AssertDesignEqual(result, await verification.Designs.SingleAsync(x => x.Id == original.Id));
-        AssertDesignEqual(untouched, await verification.Designs.SingleAsync(x => x.Id == untouched.Id));
+        var stored = await verification.Designs.AsNoTracking().Include(x => x.Tags).SingleAsync(x => x.Id == original.Id);
+        var storedUntouched = await verification.Designs.AsNoTracking().Include(x => x.Tags).SingleAsync(x => x.Id == untouched.Id);
+        AssertDesignEqual(result, stored);
+        Assert.Equal(selectedTagIds, stored.Tags.Select(t => t.Id));
+        AssertDesignEqual(untouched, storedUntouched);
+        Assert.Equal(untouched.Tags.Select(t => t.Id).OrderBy(id => id),
+            storedUntouched.Tags.Select(t => t.Id).OrderBy(id => id));
         AssertOperationContextWasDisposed();
     }
 
@@ -244,7 +257,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var submitted = Design("Anchor");
 
         // Act
-        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => sut.UpdateDesignAsync(Guid.NewGuid(), submitted));
+        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => sut.UpdateDesignAsync(Guid.NewGuid(), submitted, []));
 
         // Assert
         Assert.Equal("Design not found", exception.Message);
