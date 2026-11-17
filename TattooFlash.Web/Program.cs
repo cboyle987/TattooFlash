@@ -4,7 +4,6 @@ using Auth0.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MudBlazor.Services;
@@ -30,12 +29,7 @@ var connectionString = builder.Configuration
     .GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Missing DefaultConnection.");
 
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders =
-        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse("172.30.10.0/24"));
-});
+builder.Services.ConfigureOptions<ForwardedHeadersConfiguration>();
 
 builder.Services.AddOptions<R2Configuration>()
     .Bind(builder.Configuration.GetSection("R2"))
@@ -91,9 +85,15 @@ builder.Services.AddRazorComponents()
 builder.Services.AddDbContextFactory<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo("/var/lib/tattooflash/keys"))
+var dataProtection = builder.Services.AddDataProtection()
     .SetApplicationName("TattooFlash");
+
+// Use platform defaults locally; containers configure their persistent volume path.
+var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+}
 
 var app = builder.Build();
 

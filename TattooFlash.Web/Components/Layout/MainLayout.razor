@@ -15,7 +15,7 @@
         <Authorized>
             <MudAppBar Elevation="1">
                 <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-                <MudText Typo="Typo.h5" Class="ml-3">Tattoo Flash</MudText>
+                <img src="logo.svg" alt="Tattoo Flash" class="ml-3 navbar-logo" />
                 <MudSpacer />
                 <MudButton StartIcon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Href="/account/logout">Logout</MudButton>
             </MudAppBar>
@@ -25,7 +25,7 @@
         </Authorized>
         <NotAuthorized>
             <MudAppBar>
-                <MudText Typo="Typo.h5" Class="ml-3">Tattoo Flash</MudText>
+                <img src="logo.svg" alt="Tattoo Flash" class="ml-3 navbar-logo" />
                 <MudSpacer />
                 <MudButton StartIcon="@Icons.Material.Filled.Login" Color="Color.Inherit" Href="/account/login">Login</MudButton>
             </MudAppBar>

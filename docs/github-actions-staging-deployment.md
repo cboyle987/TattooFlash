@@ -1,13 +1,19 @@
 # GitHub Actions staging deployment
 
+> The server instructions below describe the previous staging-only setup.
+> The workflow now invokes `scripts/Deploy.sh` as `staging VERSION` and uploads
+> bundles to `/home/deploy/tattooflash/staging/`. Complete the server transition
+> in [Shared VPS layout](shared-vps-compose.md) before running it. That guide also
+> documents the separate manual production promotion workflow.
+
 TattooFlash builds, tests, publishes, and deploys staging when a version tag is
 pushed. This process has completed successfully against the IONOS VPS. The site
 is https://tattoo-flash-staging.connorboyle.dev.
 
 Implementation:
 
-- [Workflow](../.github/workflows/build.yml)
-- [Server deployment script source](../scripts/DeployStaging.sh)
+- [Workflow](../.github/workflows/deploy.yml)
+- [Server deployment script source](../scripts/Deploy.sh)
 - [EF design-time context factory](../TattooFlash.Web/Data/AppDbContextFactory.cs)
 - [Staging Compose configuration](../docker-compose.staging.yml)
 

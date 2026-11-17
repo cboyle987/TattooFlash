@@ -1,0 +1,138 @@
+name: Deploy production
+run-name: Deploy production ${{ inputs.version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version successfully deployed to staging, without v (for example 0.2.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://www.emmamccormicktattoo.com
+    env:
+      RELEASE_VERSION: ${{ inputs.version }}
+    steps:
+      - name: Verify successful staging release
+        id: release
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const version = process.env.RELEASE_VERSION;
+            if (!/^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/.test(version)) {
+              throw new Error('Enter a stable version such as 0.2.0, without v.');
+            }
+            if (context.ref !== `refs/heads/${context.payload.repository.default_branch}`) {
+              throw new Error('Run production deployments from the default branch.');
+            }
+            const tag = `v${version}`;
+            const { data: commit } = await github.rest.repos.getCommit({
+              ...context.repo, ref: tag
+            });
+            const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
+              ...context.repo, workflow_id: 'deploy.yml', event: 'push',
+              head_sha: commit.sha, status: 'success', per_page: 100
+            });
+            const candidates = runs
+              .filter(run => run.head_branch === tag && run.head_sha === commit.sha)
+              .sort((a, b) => b.run_number - a.run_number);
+            for (const run of candidates) {
+              const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRun, {
+                ...context.repo, run_id: run.id, filter: 'latest', per_page: 100
+              });
+              if (!jobs.some(job => job.name === 'deploy-staging' && job.conclusion === 'success')) {
+                continue;
+              }
+              const artifacts = await github.paginate(github.rest.actions.listWorkflowRunArtifacts, {
+                ...context.repo, run_id: run.id, per_page: 100
+              });
+              const bundle = artifacts.find(artifact =>
+                artifact.name === `migrations-${version}` && !artifact.expired);
+              if (!bundle) {
+                continue;
+              }
+              core.setOutput('run-id', String(run.id));
+              core.info(`Promoting ${tag} from successful staging run ${run.html_url}`);
+              return;
+            }
+            throw new Error('No successful staging run with an unexpired matching migration artifact was found. Artifacts are retained for seven days.');
+
+      - name: Download tested migration bundle
+        uses: actions/download-artifact@v8
+        with:
+          name: migrations-${{ inputs.version }}
+          path: artifacts
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.release.outputs.run-id }}
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ vars.PRODUCTION_KNOWN_HOSTS }}
+          PRODUCTION_HOST: ${{ vars.PRODUCTION_HOST }}
+          PRODUCTION_USER: ${{ vars.PRODUCTION_USER }}
+        run: |
+          set -euo pipefail
+          : "${SSH_PRIVATE_KEY:?Missing SSH private key}"
+          : "${SSH_KNOWN_HOSTS:?Missing known hosts}"
+          : "${PRODUCTION_HOST:?Missing production host}"
+          : "${PRODUCTION_USER:?Missing production user}"
+
+          install -d -m 700 "$HOME/.ssh"
+          umask 077
+          printf '%s\n' "$SSH_PRIVATE_KEY" > "$HOME/.ssh/production_key"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+
+          cat > "$HOME/.ssh/config" <<EOF
+          Host production
+            HostName $PRODUCTION_HOST
+            User $PRODUCTION_USER
+            IdentityFile ~/.ssh/production_key
+            IdentitiesOnly yes
+            BatchMode yes
+            StrictHostKeyChecking yes
+            HostKeyAlgorithms ssh-ed25519
+            ConnectTimeout 10
+          EOF
+
+      - name: Verify deployment access
+        run: |
+          set -euo pipefail
+          test -f "artifacts/efbundle-$RELEASE_VERSION"
+          ssh -T production \
+            "sudo -n -l /usr/local/sbin/tattooflash-deploy production $RELEASE_VERSION"
+
+      - name: Upload migration bundle
+        run: |
+          set -euo pipefail
+          ssh -T production "install -d -m 700 /home/deploy/tattooflash/production"
+          scp "artifacts/efbundle-$RELEASE_VERSION" \
+            "production:/home/deploy/tattooflash/production/efbundle-$RELEASE_VERSION.upload"
+          ssh -T production \
+            "mv /home/deploy/tattooflash/production/efbundle-$RELEASE_VERSION.upload /home/deploy/tattooflash/production/efbundle-$RELEASE_VERSION"
+
+      - name: Deploy production
+        run: |
+          set -euo pipefail
+          ssh -T production \
+            "sudo -n /usr/local/sbin/tattooflash-deploy production $RELEASE_VERSION"
+
+      - name: Remove SSH credentials
+        if: always()
+        run: |
+          rm -f "$HOME/.ssh/production_key" \
+            "$HOME/.ssh/known_hosts" \
+            "$HOME/.ssh/config"
