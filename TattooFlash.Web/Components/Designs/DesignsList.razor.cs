@@ -12,6 +12,12 @@ namespace TattooFlash.Web.Components.Designs
 
         [Inject]
         public IDesignService DesignService { get; set; } = default!;
+
+        [Inject]
+        public ITagService TagService { get; set; } = default!;
+
+        private List<TagModel> _tags = new List<TagModel>();
+        private Guid _selectedTagId = Guid.Empty;
         [Inject]
         public ILogger<DesignsList> Logger { get; set; } = default!;
 
@@ -23,13 +29,19 @@ namespace TattooFlash.Web.Components.Designs
             await LoadDesigns(1);
         }
 
+        protected async Task OnFilterChanged()
+        {
+            await LoadDesigns(1);
+        }
+
         private async Task LoadDesigns(int pageNumber)
         {
             try
             {
                 _loadError = string.Empty;
                 _Loading = true;
-                Results = await DesignService.GetPaginatedDesigns(pageNumber);
+                Results = await DesignService.GetPaginatedDesigns(pageNumber, _selectedTagId);
+                _tags = await TagService.GetAllTagsAsync();
             }
             catch (Exception ex)
             {

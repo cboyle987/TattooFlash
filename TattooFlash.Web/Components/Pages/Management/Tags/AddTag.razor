@@ -1,0 +1,18 @@
+@page "/management/tag/add"
+@using TattooFlash.Web.Components.Tags
+@attribute [Authorize]
+
+<MudContainer>
+    <MudPaper>
+        <MudGrid>
+            <MudItem xs="12" Class="d-flex justify-center">
+                <MudText Typo="Typo.h3">Add New Tag</MudText>
+            </MudItem>
+        </MudGrid>
+        @if (!string.IsNullOrEmpty(_saveError))
+        {
+            <MudAlert Severity="Severity.Error">@_saveError</MudAlert>
+        }
+        <TagInput Tag="NewTag" OnValidSubmit="CreateTag" />
+    </MudPaper>
+</MudContainer>

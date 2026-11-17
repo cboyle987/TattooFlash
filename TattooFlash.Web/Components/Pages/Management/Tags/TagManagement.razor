@@ -1,0 +1,34 @@
+@page "/management/tag"
+@using TattooFlash.Web.Components.Placeholders
+@using TattooFlash.Web.Components.Tags
+@attribute [Authorize]
+
+<MudContainer>
+    @if (isLoading)
+    {
+        foreach (var i in Enumerable.Range(0, 4))
+        {
+            <SkeletonManagementItem />
+        }
+    } else
+    {
+        @if (!string.IsNullOrWhiteSpace(loadingError))
+        {
+            <MudAlert Severity="Severity.Error">@loadingError</MudAlert>
+        } else
+        {
+            <MudPaper Class="pa-5">
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" Class="d-flex justify-center">
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" Href="/management/tag/add">Add New Tag</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+
+            @foreach(var tag in Tags)
+            {
+                <TagManagementItem OnTagDeleted="OnTagDeleted" Tag="tag"></TagManagementItem>
+            }
+        }
+    }
+</MudContainer>

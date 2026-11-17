@@ -1,4 +1,5 @@
-﻿<MudForm Class="pa-4" @ref="_form">
+@using TattooFlash.Web.Models
+<MudForm Class="pa-4" @ref="_form">
     <MudGrid>
         <MudItem xs="12">
             <MudTextField Label="Design Name" @bind-Value="Design.Name" Required="true" RequiredError="Design name is required." />
@@ -8,8 +9,17 @@
         </MudItem>
         <MudItem xs="12">
             <MudFileUpload T="IBrowserFile" @bind-Files="_selectedImage" Accept="image/jpeg,image/png,image/webp" Disabled="_isSaving" Required="string.IsNullOrWhiteSpace(Design.ImageName)" RequiredError="Please select an image"> </MudFileUpload>
-           
         </MudItem>
+
+        <MudItem xs="12">
+            <MudSelect Disabled="_isSaving" T="Guid" MultiSelection="true" Label="Tags" @bind-SelectedValues="SelectedTags" ToStringFunc="ToTagDisplayName">
+                @foreach (var tag in AvailableTags)
+                {
+                    <MudSelectItem Value="@tag.Id" >@tag.DisplayName</MudSelectItem>
+                }
+            </MudSelect> 
+        </MudItem>
+
         <MudItem xs="12" class="d-flex justify-center">
             <MudButton Disabled="@_isSaving" Variant="Variant.Filled" Color="Color.Success" OnClick="HandleSubmit">
                 @if (_isSaving)

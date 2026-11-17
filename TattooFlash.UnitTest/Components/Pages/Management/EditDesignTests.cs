@@ -5,12 +5,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
 using TattooFlash.Web.Components.Designs;
-using TattooFlash.Web.Components.Pages.Management;
 using TattooFlash.Web.Enums;
 using TattooFlash.Web.Models;
 using TattooFlash.Web.Interfaces;
 
 using static TattooFlash.UnitTest.Components.Pages.Management.ManagementPageTestSupport;
+using TattooFlash.Web.Components.Pages.Management.Design;
 
 namespace TattooFlash.UnitTest.Components.Pages.Management;
 
@@ -57,23 +57,24 @@ public class EditDesignTests
     public async Task WhenUpdatingWithoutAReplacementThenNoImageStreamIsPassed(bool fails)
     {
         // Arrange
+        var selectedTagIds = new List<Guid> { Guid.NewGuid() };
         var design = CreateDesign();
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         service.Setup(x => x.GetDesignByIdAsync(design.Id)).ReturnsAsync(design);
         if (fails)
-            service.Setup(x => x.UpdateDesignAsync(design.Id, design, null)).ThrowsAsync(new InvalidOperationException("Save failed"));
+            service.Setup(x => x.UpdateDesignAsync(design.Id, design, null, selectedTagIds)).ThrowsAsync(new InvalidOperationException("Save failed"));
         else
-            service.Setup(x => x.UpdateDesignAsync(design.Id, design, null)).ReturnsAsync(DesignSaveResult.Success(design));
+            service.Setup(x => x.UpdateDesignAsync(design.Id, design, null, selectedTagIds)).ReturnsAsync(DesignSaveResult.Success(design));
         await using var context = CreateContext(service);
         var page = context.RenderWithProviders<EditDesign>(p => p.Add(x => x.DesignId, design.Id));
         var navigation = context.Services.GetRequiredService<NavigationManager>();
         var originalUri = navigation.Uri;
 
         // Act
-        await SubmitAsync(page, new DesignSumbission { Design = design });
+        await SubmitAsync(page, new DesignSumbission { Design = design, SelectedTagIds = selectedTagIds });
 
         // Assert
-        service.Verify(x => x.UpdateDesignAsync(design.Id, design, null), Times.Once);
+        service.Verify(x => x.UpdateDesignAsync(design.Id, design, null, selectedTagIds), Times.Once);
         if (fails)
         {
             Assert.Contains("An Error has occurred saving your design please try again later.", page.FindComponent<MudAlert>().Markup);
@@ -82,7 +83,7 @@ public class EditDesignTests
         else
         {
             Assert.Empty(page.FindComponents<MudAlert>());
-            Assert.Equal("http://localhost/management", navigation.Uri);
+            Assert.Equal("http://localhost/management/design", navigation.Uri);
         }
     }
 
@@ -232,7 +233,7 @@ public class EditDesignTests
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         service.Setup(x => x.GetDesignByIdAsync(first.Id)).ReturnsAsync(first);
         service.Setup(x => x.GetDesignByIdAsync(next.Id)).ReturnsAsync(next);
-        service.Setup(x => x.UpdateDesignAsync(first.Id, first, null))
+        service.Setup(x => x.UpdateDesignAsync(first.Id, first, null, Array.Empty<Guid>()))
             .ThrowsAsync(new InvalidOperationException("Save failed"));
         await using var context = CreateContext(service);
         var page = context.RenderWithProviders<EditDesign>(p => p.Add(x => x.DesignId, first.Id));
@@ -247,7 +248,7 @@ public class EditDesignTests
         Assert.Empty(page.FindComponents<MudAlert>());
         service.Verify(x => x.GetDesignByIdAsync(first.Id), Times.Once);
         service.Verify(x => x.GetDesignByIdAsync(next.Id), Times.Once);
-        service.Verify(x => x.UpdateDesignAsync(first.Id, first, null), Times.Once);
+        service.Verify(x => x.UpdateDesignAsync(first.Id, first, null, Array.Empty<Guid>()), Times.Once);
         service.VerifyNoOtherCalls();
     }
 
@@ -262,6 +263,7 @@ public class EditDesignTests
     public async Task WhenImageIsSubmittedThenResultControlsNavigationAndError(string outcome, string? error)
     {
         // Arrange
+        var selectedTagIds = new List<Guid> { Guid.NewGuid() };
         var design = CreateDesign();
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         service.Setup(x => x.GetDesignByIdAsync(design.Id)).ReturnsAsync(design);
@@ -273,10 +275,11 @@ public class EditDesignTests
         Stream? submittedStream = null;
         if (outcome != "read-error")
         {
-            var save = service.Setup(x => x.UpdateDesignAsync(design.Id, design, It.IsAny<Stream?>()))
-                .Callback((Guid id, DesignModel model, Stream? stream) =>
+            var save = service.Setup(x => x.UpdateDesignAsync(design.Id, design, It.IsAny<Stream?>(), selectedTagIds))
+                .Callback((Guid id, DesignModel model, Stream? stream, IReadOnlyCollection<Guid> tagIds) =>
                 {
                     AssertBufferedImage(design, model, stream, bytes);
+                    Assert.Equal(selectedTagIds, tagIds);
                     submittedStream = stream;
                 });
             if (outcome == "service-error")
@@ -295,7 +298,7 @@ public class EditDesignTests
         var page = context.RenderWithProviders<EditDesign>(p => p.Add(x => x.DesignId, design.Id));
         var navigation = context.Services.GetRequiredService<NavigationManager>();
         var originalUri = navigation.Uri;
-        var submission = new DesignSumbission { Design = design, SelectedImage = file.Object };
+        var submission = new DesignSumbission { Design = design, SelectedImage = file.Object, SelectedTagIds = selectedTagIds };
 
         // Act: test the page's wiring to the child form's public callback.
         await SubmitAsync(page, submission);
@@ -303,7 +306,7 @@ public class EditDesignTests
         // Assert
         AssertSaveOutcome(page, navigation, originalUri, error);
         file.Verify(x => x.OpenReadStream(10 * 1024 * 1024, It.IsAny<CancellationToken>()), Times.Once);
-        service.Verify(x => x.UpdateDesignAsync(design.Id, design, It.IsAny<Stream?>()), outcome == "read-error" ? Times.Never() : Times.Once());
+        service.Verify(x => x.UpdateDesignAsync(design.Id, design, It.IsAny<Stream?>(), selectedTagIds), outcome == "read-error" ? Times.Never() : Times.Once());
         if (submittedStream is not null)
             Assert.False(submittedStream.CanRead);
     }
@@ -312,16 +315,17 @@ public class EditDesignTests
     public async Task WhenSaveIsRetriedSuccessfullyThenPreviousErrorIsCleared()
     {
         // Arrange
+        var selectedTagIds = new List<Guid> { Guid.NewGuid() };
         var design = CreateDesign();
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         service.Setup(x => x.GetDesignByIdAsync(design.Id)).ReturnsAsync(design);
-        service.SetupSequence(x => x.UpdateDesignAsync(design.Id, design, It.IsAny<Stream?>()))
+        service.SetupSequence(x => x.UpdateDesignAsync(design.Id, design, It.IsAny<Stream?>(), selectedTagIds))
             .ReturnsAsync(DesignSaveResult.Failure(ImageProcessingError.InvalidImage))
             .ReturnsAsync(DesignSaveResult.Success(design));
         var file = CreateBrowserFile([1, 2, 3]);
         await using var context = CreateContext(service);
         var page = context.RenderWithProviders<EditDesign>(p => p.Add(x => x.DesignId, design.Id));
-        var submission = new DesignSumbission { Design = design, SelectedImage = file.Object };
+        var submission = new DesignSumbission { Design = design, SelectedImage = file.Object, SelectedTagIds = selectedTagIds };
         await SubmitAsync(page, submission);
         Assert.Single(page.FindComponents<MudAlert>());
 
@@ -330,8 +334,8 @@ public class EditDesignTests
 
         // Assert
         Assert.Empty(page.FindComponents<MudAlert>());
-        Assert.Equal("http://localhost/management", context.Services.GetRequiredService<NavigationManager>().Uri);
-        service.Verify(x => x.UpdateDesignAsync(design.Id, design, It.IsAny<Stream?>()), Times.Exactly(2));
+        Assert.Equal("http://localhost/management/design", context.Services.GetRequiredService<NavigationManager>().Uri);
+        service.Verify(x => x.UpdateDesignAsync(design.Id, design, It.IsAny<Stream?>(), selectedTagIds), Times.Exactly(2));
     }
 
     private static void AssertLoading(IRenderedComponent<EditDesign> page)

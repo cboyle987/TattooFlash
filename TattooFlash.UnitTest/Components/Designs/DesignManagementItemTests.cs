@@ -55,7 +55,7 @@ public class DesignManagementItemTests
 
         // Assert
         var navigation = context.Services.GetRequiredService<NavigationManager>();
-        Assert.Equal($"http://localhost/management/edit-design/{design.Id}", navigation.Uri);
+        Assert.Equal($"http://localhost/management/design/edit/{design.Id}", navigation.Uri);
         service.VerifyNoOtherCalls();
     }
 
@@ -79,7 +79,7 @@ public class DesignManagementItemTests
 
         // Assert
         dialogs.Verify(x => x.ShowAsync<DeleteConfirmationDialog>("Confirm Delete",
-            It.Is<DialogParameters>(p => ReferenceEquals(p.Get<DesignModel>("Design"), design))), Times.Once);
+            It.Is<DialogParameters>(p => p.Get<string>("Name") == design.Name)), Times.Once);
         service.Verify(x => x.DeleteDesignAsync(design.Id), Times.Once);
         service.VerifyNoOtherCalls();
         Assert.Equal(new[] { design.Id }, deleted);

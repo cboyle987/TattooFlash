@@ -54,7 +54,7 @@ public class MainLayoutTests
         Assert.Equal("Logout", layout.Find("a[href='/account/logout']").TextContent.Trim());
         Assert.Empty(layout.FindAll("a[href='/account/login']"));
         Assert.Single(layout.FindComponents<NavMenu>());
-        Assert.Equal("management", layout.Find("a[href='management']").GetAttribute("href"));
+        Assert.Equal("management/design/", layout.Find("a[href='management/design/']").GetAttribute("href"));
         var drawer = layout.FindComponent<MudDrawer>();
         Assert.False(drawer.Instance.GetState(x => x.Open));
         var menu = layout.FindComponent<MudIconButton>();

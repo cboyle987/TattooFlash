@@ -7,7 +7,7 @@ using MudBlazor;
 using TattooFlash.Web.Components.Designs;
 using TattooFlash.Web.Components.Dialogs;
 using TattooFlash.Web.Components.Layout;
-using TattooFlash.Web.Components.Pages.Management;
+using TattooFlash.Web.Components.Pages.Management.Design;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
 
@@ -28,7 +28,7 @@ public class ManagementNotificationTests
         var remaining = CreateDesign("Rose");
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         var mockConfig = new Mock<IConfiguration>();
-        service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(new PaginatedDesignResults
+        service.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).ReturnsAsync(new PaginatedDesignResults
         {
             Designs = [design, remaining],
             PageNumber = 1,
@@ -62,13 +62,14 @@ public class ManagementNotificationTests
         layout.WaitForAssertion(() =>
         {
             var provider = layout.FindComponent<MudSnackbarProvider>();
-            Assert.Contains(message, provider.Find("[role='alert']").TextContent);
+            var expectedRole = severity == Severity.Error ? "alert" : "status";
+            Assert.Contains(message, provider.Find($"[role='{expectedRole}']").TextContent);
             var notification = Assert.Single(context.Services.GetRequiredService<ISnackbar>().ShownSnackbars);
             Assert.Equal(message, notification.Message);
             Assert.Equal(severity, notification.Severity);
             Assert.Equal(outcome == "error" ? 2 : 1, layout.FindComponents<DesignManagementItem>().Count);
         });
-        service.Verify(x => x.GetPaginatedDesigns(1), Times.Once);
+        service.Verify(x => x.GetPaginatedDesigns(1, Guid.Empty), Times.Once);
         service.Verify(x => x.DeleteDesignAsync(design.Id), Times.Once);
         service.VerifyNoOtherCalls();
     }
@@ -85,7 +86,7 @@ public class ManagementNotificationTests
         var design = CreateDesign(available: initiallyAvailable);
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         var mockConfig = new Mock<IConfiguration>();
-        service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(new PaginatedDesignResults
+        service.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).ReturnsAsync(new PaginatedDesignResults
         {
             Designs = [design],
             PageNumber = 1,
@@ -117,12 +118,13 @@ public class ManagementNotificationTests
             Assert.Equal(expectedAvailability, design.IsAvailable);
             Assert.Single(item.FindAll($"[aria-label='{(expectedAvailability ? "Available" : "Not available")}']"));
             var provider = layout.FindComponent<MudSnackbarProvider>();
-            Assert.Contains(message, provider.Find("[role='alert']").TextContent);
+            var expectedRole = severity == Severity.Error ? "alert" : "status";
+            Assert.Contains(message, provider.Find($"[role='{expectedRole}']").TextContent);
             var notification = Assert.Single(context.Services.GetRequiredService<ISnackbar>().ShownSnackbars);
             Assert.Equal(message, notification.Message);
             Assert.Equal(severity, notification.Severity);
         });
-        service.Verify(x => x.GetPaginatedDesigns(1), Times.Once);
+        service.Verify(x => x.GetPaginatedDesigns(1, Guid.Empty), Times.Once);
         service.Verify(x => x.ToggleAvailabilityAsync(design.Id), Times.Once);
         service.VerifyNoOtherCalls();
     }

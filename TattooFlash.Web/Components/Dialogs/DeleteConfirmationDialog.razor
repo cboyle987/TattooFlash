@@ -2,7 +2,7 @@
 
 <MudDialog>
     <DialogContent >
-        Are you sure you want to delete @Design.Name? This action cannot be undone.
+        Are you sure you want to delete @Name? This action cannot be undone.
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Cancel</MudButton>
@@ -14,7 +14,7 @@
     private IMudDialogInstance MudDialog { get; set; } = default!;
 
     [Parameter]
-    public DesignModel Design { get; set; } = default!;
+    public string Name { get; set; } = string.Empty;
 
         private void Submit() => MudDialog.Close(DialogResult.Ok(true));
 

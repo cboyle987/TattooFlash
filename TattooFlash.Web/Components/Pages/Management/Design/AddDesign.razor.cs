@@ -6,7 +6,7 @@ using TattooFlash.Web.Helpers;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
 
-namespace TattooFlash.Web.Components.Pages.Management
+namespace TattooFlash.Web.Components.Pages.Management.Design
 {
 
     public partial class AddDesign
@@ -23,11 +23,35 @@ namespace TattooFlash.Web.Components.Pages.Management
         public ILogger<AddDesign> Logger { get; set; } = default!;
         private string _saveError = String.Empty;
 
-        override protected Task OnInitializedAsync()
+        [Inject]
+        public ITagService TagService { get; set; } = default!;
+
+        private List<TagModel> _availableTags { get; set; } = new List<TagModel>();
+
+        private bool _isLoading = false;
+        private string _loadError = String.Empty;
+
+        override protected async Task OnInitializedAsync()
         {
             NewDesign = new DesignModel() { Name = String.Empty, Price = 0, ImageName = String.Empty, IsAvailable = true };
 
-            return base.OnInitializedAsync();
+            _isLoading = true;
+            _loadError = string.Empty;
+            try
+            {
+                _availableTags = await TagService.GetAllTagsAsync();
+
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error loading tags");
+                _loadError = "An error occurred while loading the tags. Please try again later.";
+            }
+            finally
+            {
+                _isLoading = false;
+            }
+
         }
 
         private async Task CreateDesign(DesignSumbission submission)
@@ -49,7 +73,7 @@ namespace TattooFlash.Web.Components.Pages.Management
                 buffer.Position = 0;
 
 
-                var result = await DesignService.CreateDesignAsync(submission.Design, buffer);
+                var result = await DesignService.CreateDesignAsync(submission.Design, buffer, submission.SelectedTagIds);
                 if (!result.IsSuccess)
                 {
                     var error = result.ImageError
@@ -58,7 +82,7 @@ namespace TattooFlash.Web.Components.Pages.Management
                     return;
                 }
 
-                NavigationManager.NavigateTo("/management");
+                NavigationManager.NavigateTo("/management/design");
 
             }
             catch (Exception ex)

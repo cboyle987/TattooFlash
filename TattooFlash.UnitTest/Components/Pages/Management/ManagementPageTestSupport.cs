@@ -18,6 +18,9 @@ internal static class ManagementPageTestSupport
         var context = new ComponentTestContext();
         context.Services.AddSingleton(service.Object);
         context.Services.AddSingleton(Mock.Of<IImageService>());
+        var tags = new Mock<ITagService>(MockBehavior.Strict);
+        tags.Setup(x => x.GetAllTagsAsync()).ReturnsAsync(new List<TagModel>());
+        context.Services.AddSingleton(tags.Object);
         return context;
     }
 
@@ -57,7 +60,7 @@ internal static class ManagementPageTestSupport
     {
         if (error is null)
         {
-            Assert.Equal("http://localhost/management", navigation.Uri);
+            Assert.Equal("http://localhost/management/design", navigation.Uri);
             Assert.Empty(page.FindComponents<MudAlert>());
         }
         else

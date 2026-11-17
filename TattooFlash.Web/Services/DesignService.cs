@@ -8,12 +8,15 @@ namespace TattooFlash.Web.Services;
 public class DesignService(IDesignRepository repository, IImageProcessingService imageProcessingService, IImageService imageService, ILogger<DesignService> logger) : IDesignService
 {
 
-    public Task<List<DesignModel>> GetAllDesignsAsync() => repository.GetAllDesignsAsync();
+    public Task<List<DesignModel>> GetAllDesignsAsync(Guid SelectedTagId)
+    {
+        return repository.GetAllDesignsAsync(SelectedTagId);
+    }
 
     public Task<DesignModel?> GetDesignByIdAsync(Guid id) => repository.GetDesignByIdAsync(id);
 
 
-    public async Task<DesignSaveResult> CreateDesignAsync(DesignModel design, Stream imageStream)
+    public async Task<DesignSaveResult> CreateDesignAsync(DesignModel design, Stream imageStream, IReadOnlyCollection<Guid> selectedTagIds)
     {
 
         var processedResult = imageProcessingService.ProcessImage(imageStream);
@@ -33,7 +36,7 @@ public class DesignService(IDesignRepository repository, IImageProcessingService
 
         try
         {
-            var model = await repository.CreateDesignAsync(design);
+            var model = await repository.CreateDesignAsync(design, selectedTagIds);
             return DesignSaveResult.Success(model);
 
         }
@@ -46,13 +49,13 @@ public class DesignService(IDesignRepository repository, IImageProcessingService
 
     }
 
-    public async Task<DesignSaveResult> UpdateDesignAsync(Guid id, DesignModel design, Stream? imageStream)
+    public async Task<DesignSaveResult> UpdateDesignAsync(Guid id, DesignModel design, Stream? imageStream, IReadOnlyCollection<Guid> selectedTagIds)
     {
 
         // Image has not changed no updated required. 
         if (imageStream == null)
         {
-            var model = await repository.UpdateDesignAsync(id, design);
+            var model = await repository.UpdateDesignAsync(id, design, selectedTagIds);
             return DesignSaveResult.Success(model);
         }
 
@@ -74,7 +77,7 @@ public class DesignService(IDesignRepository repository, IImageProcessingService
         DesignModel result;
         try
         {
-            result = await repository.UpdateDesignAsync(id, design);
+            result = await repository.UpdateDesignAsync(id, design, selectedTagIds);
         }
         catch
         {
@@ -115,9 +118,9 @@ public class DesignService(IDesignRepository repository, IImageProcessingService
 
     public Task ToggleAvailabilityAsync(Guid id) => repository.ToggleAvailabilityAsync(id);
 
-    public Task<PaginatedDesignResults> GetPaginatedDesigns(int pageNumber)
+    public Task<PaginatedDesignResults> GetPaginatedDesigns(int pageNumber, Guid selectedTagId)
     {
-        return repository.GetDesignsAsync(pageNumber);
+        return repository.GetDesignsAsync(pageNumber, selectedTagId);
     }
 
     public async Task HandleImageRollbackAsync(string resultFilename, string originalFilename, DesignModel design)

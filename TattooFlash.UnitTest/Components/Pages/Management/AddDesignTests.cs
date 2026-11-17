@@ -5,12 +5,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using MudBlazor;
 using TattooFlash.Web.Components.Designs;
-using TattooFlash.Web.Components.Pages.Management;
 using TattooFlash.Web.Enums;
 using TattooFlash.Web.Models;
 using TattooFlash.Web.Interfaces;
 
 using static TattooFlash.UnitTest.Components.Pages.Management.ManagementPageTestSupport;
+using TattooFlash.Web.Components.Pages.Management.Design;
 
 namespace TattooFlash.UnitTest.Components.Pages.Management;
 
@@ -71,6 +71,7 @@ public class AddDesignTests
         // Arrange
         var design = CreateDesign();
         var service = new Mock<IDesignService>(MockBehavior.Strict);
+        var selectedTagIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
         var bytes = new byte[] { 1, 2, 3, 4 };
         var file = CreateBrowserFile(bytes);
         if (outcome == "read-error")
@@ -79,10 +80,11 @@ public class AddDesignTests
         Stream? submittedStream = null;
         if (outcome != "read-error")
         {
-            var save = service.Setup(x => x.CreateDesignAsync(design, It.IsAny<Stream>()))
-                .Callback((DesignModel model, Stream stream) =>
+            var save = service.Setup(x => x.CreateDesignAsync(design, It.IsAny<Stream>(), It.IsAny<IReadOnlyCollection<Guid>>()))
+                .Callback((DesignModel model, Stream stream, IReadOnlyCollection<Guid> tagIds) =>
                 {
                     AssertBufferedImage(design, model, stream, bytes);
+                    Assert.Equal(selectedTagIds, tagIds);
                     submittedStream = stream;
                 });
             if (outcome == "service-error")
@@ -101,7 +103,7 @@ public class AddDesignTests
         var page = context.RenderWithProviders<AddDesign>();
         var navigation = context.Services.GetRequiredService<NavigationManager>();
         var originalUri = navigation.Uri;
-        var submission = new DesignSumbission { Design = design, SelectedImage = file.Object };
+        var submission = new DesignSumbission { Design = design, SelectedImage = file.Object, SelectedTagIds = selectedTagIds };
 
         // Act: test the page's wiring to the child form's public callback.
         await SubmitAsync(page, submission);
@@ -109,7 +111,7 @@ public class AddDesignTests
         // Assert
         AssertSaveOutcome(page, navigation, originalUri, error);
         file.Verify(x => x.OpenReadStream(10 * 1024 * 1024, It.IsAny<CancellationToken>()), Times.Once);
-        service.Verify(x => x.CreateDesignAsync(design, It.IsAny<Stream>()), outcome == "read-error" ? Times.Never() : Times.Once());
+        service.Verify(x => x.CreateDesignAsync(design, It.IsAny<Stream>(), It.IsAny<IReadOnlyCollection<Guid>>()), outcome == "read-error" ? Times.Never() : Times.Once());
         if (submittedStream is not null)
             Assert.False(submittedStream.CanRead);
     }
@@ -120,7 +122,7 @@ public class AddDesignTests
         // Arrange
         var design = CreateDesign();
         var service = new Mock<IDesignService>(MockBehavior.Strict);
-        service.SetupSequence(x => x.CreateDesignAsync(design, It.IsAny<Stream>()))
+        service.SetupSequence(x => x.CreateDesignAsync(design, It.IsAny<Stream>(), It.IsAny<IReadOnlyCollection<Guid>>()))
             .ReturnsAsync(DesignSaveResult.Failure(ImageProcessingError.InvalidImage))
             .ReturnsAsync(DesignSaveResult.Success(design));
         var file = CreateBrowserFile([1, 2, 3]);
@@ -135,7 +137,7 @@ public class AddDesignTests
 
         // Assert
         Assert.Empty(page.FindComponents<MudAlert>());
-        Assert.Equal("http://localhost/management", context.Services.GetRequiredService<NavigationManager>().Uri);
-        service.Verify(x => x.CreateDesignAsync(design, It.IsAny<Stream>()), Times.Exactly(2));
+        Assert.Equal("http://localhost/management/design", context.Services.GetRequiredService<NavigationManager>().Uri);
+        service.Verify(x => x.CreateDesignAsync(design, It.IsAny<Stream>(), It.IsAny<IReadOnlyCollection<Guid>>()), Times.Exactly(2));
     }
 }

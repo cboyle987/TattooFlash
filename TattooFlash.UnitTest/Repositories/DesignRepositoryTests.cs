@@ -53,10 +53,28 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository();
 
         // Act
-        var result = await sut.GetAllDesignsAsync();
+        var result = await sut.GetAllDesignsAsync(Guid.Empty);
 
         // Assert
         Assert.Equal(new[] { anchor.Id, zebra.Id }, result.Select(x => x.Id));
+        AssertReadContextWasUntrackedAndDisposed();
+    }
+
+    [Fact]
+    public async Task GetAllDesignsAsync_WithSelectedTag_ReturnsOnlyMatchingDesigns()
+    {
+        // Arrange
+        var selected = new TagModel { DisplayName = "Flowers", NormalizedName = "FLOWERS" };
+        var matching = Design("Rose");
+        matching.Tags = [selected];
+        await SeedAsync(Design("Anchor"), matching);
+        var sut = CreateRepository();
+
+        // Act
+        var result = await sut.GetAllDesignsAsync(selected.Id);
+
+        // Assert
+        Assert.Equal(matching.Id, Assert.Single(result).Id);
         AssertReadContextWasUntrackedAndDisposed();
     }
 
@@ -67,7 +85,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository();
 
         // Act
-        var result = await sut.GetAllDesignsAsync();
+        var result = await sut.GetAllDesignsAsync(Guid.Empty);
 
         // Assert
         Assert.Empty(result);
@@ -114,7 +132,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var before = DateTime.UtcNow;
 
         // Act
-        var result = await sut.CreateDesignAsync(design);
+        var result = await sut.CreateDesignAsync(design, Array.Empty<Guid>());
 
         // Assert
         var after = DateTime.UtcNow;
@@ -131,12 +149,92 @@ public class DesignRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task UpdateDesignAsync_UpdatesEditableFieldsAndPreservesStoredIdentityAndCreationTime()
+    public async Task CreateDesignAsync_WithNoSelectedTags_PersistsDesignWithoutAssignments()
+    {
+        // Arrange: having a tag available must not assign it automatically.
+        var available = new TagModel { DisplayName = "Flowers", NormalizedName = "FLOWERS" };
+        await using (var seed = new AppDbContext(_options))
+        {
+            seed.Tags.Add(available);
+            await seed.SaveChangesAsync();
+        }
+        var design = Design("Rose");
+        var sut = CreateRepository();
+
+        // Act
+        var result = await sut.CreateDesignAsync(design, Array.Empty<Guid>());
+
+        // Assert: use a fresh context to verify stored relationships.
+        await using var verification = new AppDbContext(_options);
+        var stored = await verification.Designs.AsNoTracking().Include(d => d.Tags).SingleAsync();
+        AssertDesignEqual(result, stored);
+        Assert.Empty(result.Tags);
+        Assert.Empty(stored.Tags);
+        Assert.Equal(available.Id, (await verification.Tags.SingleAsync()).Id);
+        Assert.Equal(0L, await verification.Database.SqlQueryRaw<long>(
+            "SELECT COUNT(*) AS Value FROM DesignTags").SingleAsync());
+        AssertOperationContextWasDisposed();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CreateDesignAsync_WithExistingTags_PersistsOnlySelectedAssignmentsWithoutDuplicatingTags(bool repeatId)
+    {
+        // Arrange: one selected tag already belongs to another design.
+        var flowers = new TagModel { DisplayName = "Flowers", NormalizedName = "FLOWERS" };
+        var traditional = new TagModel { DisplayName = "Traditional", NormalizedName = "TRADITIONAL" };
+        var unselected = new TagModel { DisplayName = "Japanese", NormalizedName = "JAPANESE" };
+        var existing = Design("Anchor");
+        existing.Tags = [traditional];
+        await using (var seed = new AppDbContext(_options))
+        {
+            seed.Tags.AddRange(flowers, traditional, unselected);
+            seed.Designs.Add(existing);
+            await seed.SaveChangesAsync();
+        }
+        var selectedIds = new List<Guid> { flowers.Id, traditional.Id };
+        if (repeatId) selectedIds.Add(flowers.Id);
+        var design = Design("Rose");
+        var sut = CreateRepository();
+
+        // Act
+        var result = await sut.CreateDesignAsync(design, selectedIds);
+
+        // Assert: reloading prevents EF's in-memory relationship fixup hiding a missing save.
+        await using var verification = new AppDbContext(_options);
+        var stored = await verification.Designs.AsNoTracking().Include(d => d.Tags)
+            .SingleAsync(d => d.Id == result.Id);
+        AssertDesignEqual(result, stored);
+        Assert.Equal(new[] { flowers.Id, traditional.Id }.OrderBy(id => id),
+            stored.Tags.Select(t => t.Id).OrderBy(id => id));
+        var storedTags = await verification.Tags.AsNoTracking().OrderBy(t => t.NormalizedName).ToListAsync();
+        Assert.Equal(new[] { flowers.Id, unselected.Id, traditional.Id }, storedTags.Select(t => t.Id));
+        Assert.Equal(new[] { "Flowers", "Japanese", "Traditional" }, storedTags.Select(t => t.DisplayName));
+        Assert.Equal(new[] { "FLOWERS", "JAPANESE", "TRADITIONAL" }, storedTags.Select(t => t.NormalizedName));
+        var storedExisting = await verification.Designs.AsNoTracking().Include(d => d.Tags)
+            .SingleAsync(d => d.Id == existing.Id);
+        AssertDesignEqual(existing, storedExisting);
+        Assert.Equal(traditional.Id, Assert.Single(storedExisting.Tags).Id);
+        Assert.Equal(3L, await verification.Database.SqlQueryRaw<long>(
+            "SELECT COUNT(*) AS Value FROM DesignTags").SingleAsync());
+        AssertOperationContextWasDisposed();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task UpdateDesignAsync_UpdatesEditableFieldsAndTagsAndPreservesStoredIdentityAndCreationTime(bool clearTags)
     {
         // Arrange
         var original = Design("Anchor");
         var untouched = Design("Rose");
+        var previousTag = new TagModel { DisplayName = "Flowers", NormalizedName = "FLOWERS" };
+        var replacementTag = new TagModel { DisplayName = "Traditional", NormalizedName = "TRADITIONAL" };
+        original.Tags = [previousTag];
+        untouched.Tags = [previousTag, replacementTag];
         await SeedAsync(original, untouched);
+        Guid[] selectedTagIds = clearTags ? [] : [replacementTag.Id];
         var submitted = Design("New anchor");
         submitted.Price = 250;
         submitted.ImageName = "replacement.webp";
@@ -146,7 +244,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var before = DateTime.UtcNow;
 
         // Act
-        var result = await sut.UpdateDesignAsync(original.Id, submitted);
+        var result = await sut.UpdateDesignAsync(original.Id, submitted, selectedTagIds);
 
         // Assert
         Assert.Equal(original.Id, result.Id);
@@ -157,9 +255,15 @@ public class DesignRepositoryTests : IAsyncLifetime
         Assert.Equal(submitted.IsAvailable, result.IsAvailable);
         Assert.InRange(result.Updated, before, DateTime.UtcNow);
         Assert.Equal(DateTimeKind.Utc, result.Updated.Kind);
+        Assert.Equal(selectedTagIds, result.Tags.Select(t => t.Id));
         await using var verification = new AppDbContext(_options);
-        AssertDesignEqual(result, await verification.Designs.SingleAsync(x => x.Id == original.Id));
-        AssertDesignEqual(untouched, await verification.Designs.SingleAsync(x => x.Id == untouched.Id));
+        var stored = await verification.Designs.AsNoTracking().Include(x => x.Tags).SingleAsync(x => x.Id == original.Id);
+        var storedUntouched = await verification.Designs.AsNoTracking().Include(x => x.Tags).SingleAsync(x => x.Id == untouched.Id);
+        AssertDesignEqual(result, stored);
+        Assert.Equal(selectedTagIds, stored.Tags.Select(t => t.Id));
+        AssertDesignEqual(untouched, storedUntouched);
+        Assert.Equal(untouched.Tags.Select(t => t.Id).OrderBy(id => id),
+            storedUntouched.Tags.Select(t => t.Id).OrderBy(id => id));
         AssertOperationContextWasDisposed();
     }
 
@@ -171,7 +275,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var submitted = Design("Anchor");
 
         // Act
-        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => sut.UpdateDesignAsync(Guid.NewGuid(), submitted));
+        var exception = await Assert.ThrowsAsync<KeyNotFoundException>(() => sut.UpdateDesignAsync(Guid.NewGuid(), submitted, []));
 
         // Assert
         Assert.Equal("Design not found", exception.Message);
@@ -266,7 +370,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository(2);
 
         // Act
-        var result = await sut.GetDesignsAsync(page);
+        var result = await sut.GetDesignsAsync(page, Guid.Empty);
 
         // Assert
         Assert.Equal(expectedCount, result.Designs.Count);
@@ -278,13 +382,60 @@ public class DesignRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetDesignsAsync_WithSelectedTag_FiltersBeforePagingAndLoadsAllTags()
+    {
+        // Arrange
+        var selected = new TagModel { DisplayName = "Flowers", NormalizedName = "FLOWERS" };
+        var other = new TagModel { DisplayName = "Traditional", NormalizedName = "TRADITIONAL" };
+        var newest = Design("Anchor");
+        newest.Created = OriginalTimestamp.AddDays(2);
+        newest.Tags = [other];
+        var firstMatch = Design("Rose");
+        firstMatch.Created = OriginalTimestamp.AddDays(1);
+        firstMatch.Tags = [selected];
+        var secondMatch = Design("Peony");
+        secondMatch.Tags = [selected, other];
+        await SeedAsync(newest, firstMatch, secondMatch);
+        var sut = CreateRepository(pageSize: 1);
+
+        // Act
+        var result = await sut.GetDesignsAsync(2, selected.Id);
+
+        // Assert
+        Assert.Equal(2, result.TotalItems);
+        Assert.Equal(2, result.TotalPages);
+        Assert.Equal(2, result.PageNumber);
+        var design = Assert.Single(result.Designs);
+        Assert.Equal(secondMatch.Id, design.Id);
+        Assert.Equal(new[] { selected.Id, other.Id }.OrderBy(id => id),
+            design.Tags.Select(tag => tag.Id).OrderBy(id => id));
+        AssertReadContextWasUntrackedAndDisposed();
+    }
+
+    [Fact]
+    public async Task GetDesignsAsync_WhenSelectedTagHasNoMatches_ReturnsEmptyPage()
+    {
+        // Arrange
+        await SeedAsync(Design("Anchor"));
+        var sut = CreateRepository();
+
+        // Act
+        var result = await sut.GetDesignsAsync(1, Guid.NewGuid());
+
+        // Assert
+        Assert.Empty(result.Designs);
+        Assert.Equal(0, result.TotalItems);
+        Assert.Equal(0, result.TotalPages);
+    }
+
+    [Fact]
     public async Task GetDesignsAsync_WhenEmpty_ReturnsEmptyPageWithMetadata()
     {
         // Arrange
         var sut = CreateRepository(3);
 
         // Act
-        var result = await sut.GetDesignsAsync(1);
+        var result = await sut.GetDesignsAsync(1, Guid.Empty);
 
         // Assert
         Assert.Empty(result.Designs);
@@ -302,7 +453,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository();
 
         // Act
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => sut.GetDesignsAsync(page));
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => sut.GetDesignsAsync(page, Guid.Empty));
 
         // Assert
         Assert.Equal("Invalid page number", exception.Message);
@@ -320,7 +471,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository(1);
 
         // Act
-        var result = await sut.GetDesignsAsync(2);
+        var result = await sut.GetDesignsAsync(2, Guid.Empty);
 
         // Assert
         Assert.Equal(second.Id, Assert.Single(result.Designs).Id);
@@ -338,8 +489,8 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository();
 
         // Act
-        await sut.GetAllDesignsAsync();
-        await sut.GetAllDesignsAsync();
+        await sut.GetAllDesignsAsync(Guid.Empty);
+        await sut.GetAllDesignsAsync(Guid.Empty);
 
         // Assert
         Assert.Equal(2, _operationContexts.Count);

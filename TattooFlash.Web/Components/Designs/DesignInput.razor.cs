@@ -22,7 +22,24 @@ namespace TattooFlash.Web.Components.Designs
         private string SaveButtonText() => Design.Id == Guid.Empty ? "Create" : "Update";
 
         [Parameter]
+        public List<TagModel> AvailableTags { get; set; } = new List<TagModel>();
+
+        public IReadOnlyCollection<Guid> SelectedTags { get; set; } = new List<Guid>();
+
+        [Parameter]
         public EventCallback<DesignSumbission> OnValidSubmit { get; set; }
+
+        protected override Task OnParametersSetAsync()
+        {
+            SelectedTags = Design.Tags.Select(t => t.Id).ToList();
+            return Task.CompletedTask;
+        }
+
+        private string ToTagDisplayName(Guid id)
+        {
+            var tag = AvailableTags.FirstOrDefault(t => t.Id == id);
+            return tag?.DisplayName ?? "Unknown Tag";
+        }
 
         private async Task HandleSubmit()
         {
@@ -42,7 +59,7 @@ namespace TattooFlash.Web.Components.Designs
                 }
 
 
-                await OnValidSubmit.InvokeAsync(new DesignSumbission() { Design = Design, SelectedImage = _selectedImage });
+                await OnValidSubmit.InvokeAsync(new DesignSumbission() { Design = Design, SelectedImage = _selectedImage, SelectedTagIds = SelectedTags.ToList() });
             }
             catch (Exception ex)
             {

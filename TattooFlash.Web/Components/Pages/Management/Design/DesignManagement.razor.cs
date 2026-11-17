@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 using TattooFlash.Web.Interfaces;
 using TattooFlash.Web.Models;
 
-namespace TattooFlash.Web.Components.Pages.Management
+namespace TattooFlash.Web.Components.Pages.Management.Design
 {
     public partial class DesignManagement
     {
@@ -28,7 +28,7 @@ namespace TattooFlash.Web.Components.Pages.Management
             {
                 LoadingError = string.Empty;
                 IsLoading = true;
-                Results = await DesignService.GetPaginatedDesigns(pageNumber);
+                Results = await DesignService.GetPaginatedDesigns(pageNumber, Guid.Empty);
             }
             catch (Exception ex)
             {
