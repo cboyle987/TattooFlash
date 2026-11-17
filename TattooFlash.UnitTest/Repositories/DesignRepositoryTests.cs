@@ -114,7 +114,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var before = DateTime.UtcNow;
 
         // Act
-        var result = await sut.CreateDesignAsync(design);
+        var result = await sut.CreateDesignAsync(design, Array.Empty<Guid>());
 
         // Assert
         var after = DateTime.UtcNow;
@@ -127,6 +127,79 @@ public class DesignRepositoryTests : IAsyncLifetime
         Assert.Equal(DateTimeKind.Utc, result.Updated.Kind);
         await using var verification = new AppDbContext(_options);
         AssertDesignEqual(result, await verification.Designs.SingleAsync());
+        AssertOperationContextWasDisposed();
+    }
+
+    [Fact]
+    public async Task CreateDesignAsync_WithNoSelectedTags_PersistsDesignWithoutAssignments()
+    {
+        // Arrange: having a tag available must not assign it automatically.
+        var available = new TagModel { DisplayName = "Flowers", NormalizedName = "FLOWERS" };
+        await using (var seed = new AppDbContext(_options))
+        {
+            seed.Tags.Add(available);
+            await seed.SaveChangesAsync();
+        }
+        var design = Design("Rose");
+        var sut = CreateRepository();
+
+        // Act
+        var result = await sut.CreateDesignAsync(design, Array.Empty<Guid>());
+
+        // Assert: use a fresh context to verify stored relationships.
+        await using var verification = new AppDbContext(_options);
+        var stored = await verification.Designs.AsNoTracking().Include(d => d.Tags).SingleAsync();
+        AssertDesignEqual(result, stored);
+        Assert.Empty(result.Tags);
+        Assert.Empty(stored.Tags);
+        Assert.Equal(available.Id, (await verification.Tags.SingleAsync()).Id);
+        Assert.Equal(0L, await verification.Database.SqlQueryRaw<long>(
+            "SELECT COUNT(*) AS Value FROM DesignTags").SingleAsync());
+        AssertOperationContextWasDisposed();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task CreateDesignAsync_WithExistingTags_PersistsOnlySelectedAssignmentsWithoutDuplicatingTags(bool repeatId)
+    {
+        // Arrange: one selected tag already belongs to another design.
+        var flowers = new TagModel { DisplayName = "Flowers", NormalizedName = "FLOWERS" };
+        var traditional = new TagModel { DisplayName = "Traditional", NormalizedName = "TRADITIONAL" };
+        var unselected = new TagModel { DisplayName = "Japanese", NormalizedName = "JAPANESE" };
+        var existing = Design("Anchor");
+        existing.Tags = [traditional];
+        await using (var seed = new AppDbContext(_options))
+        {
+            seed.Tags.AddRange(flowers, traditional, unselected);
+            seed.Designs.Add(existing);
+            await seed.SaveChangesAsync();
+        }
+        var selectedIds = new List<Guid> { flowers.Id, traditional.Id };
+        if (repeatId) selectedIds.Add(flowers.Id);
+        var design = Design("Rose");
+        var sut = CreateRepository();
+
+        // Act
+        var result = await sut.CreateDesignAsync(design, selectedIds);
+
+        // Assert: reloading prevents EF's in-memory relationship fixup hiding a missing save.
+        await using var verification = new AppDbContext(_options);
+        var stored = await verification.Designs.AsNoTracking().Include(d => d.Tags)
+            .SingleAsync(d => d.Id == result.Id);
+        AssertDesignEqual(result, stored);
+        Assert.Equal(new[] { flowers.Id, traditional.Id }.OrderBy(id => id),
+            stored.Tags.Select(t => t.Id).OrderBy(id => id));
+        var storedTags = await verification.Tags.AsNoTracking().OrderBy(t => t.NormalizedName).ToListAsync();
+        Assert.Equal(new[] { flowers.Id, unselected.Id, traditional.Id }, storedTags.Select(t => t.Id));
+        Assert.Equal(new[] { "Flowers", "Japanese", "Traditional" }, storedTags.Select(t => t.DisplayName));
+        Assert.Equal(new[] { "FLOWERS", "JAPANESE", "TRADITIONAL" }, storedTags.Select(t => t.NormalizedName));
+        var storedExisting = await verification.Designs.AsNoTracking().Include(d => d.Tags)
+            .SingleAsync(d => d.Id == existing.Id);
+        AssertDesignEqual(existing, storedExisting);
+        Assert.Equal(traditional.Id, Assert.Single(storedExisting.Tags).Id);
+        Assert.Equal(3L, await verification.Database.SqlQueryRaw<long>(
+            "SELECT COUNT(*) AS Value FROM DesignTags").SingleAsync());
         AssertOperationContextWasDisposed();
     }
 

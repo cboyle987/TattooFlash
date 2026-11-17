@@ -15,7 +15,7 @@ namespace TattooFlash.Web.Models
         [Required]
         [MaxLength(100)]
         [MinLength(1)]
-        public string DispalyName { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
 
         public List<DesignModel> Designs { get; set; } = [];
 

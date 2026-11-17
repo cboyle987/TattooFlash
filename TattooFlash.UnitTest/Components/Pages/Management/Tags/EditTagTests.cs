@@ -17,7 +17,7 @@ public class EditTagTests
     {
         // Arrange
         await using var context = new ComponentTestContext();
-        var stored = new TagModel { Id = Guid.NewGuid(), DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
+        var stored = new TagModel { Id = Guid.NewGuid(), DisplayName = "Old School", NormalizedName = "OLD SCHOOL" };
         var pending = new TaskCompletionSource<TagModel?>(TaskCreationOptions.RunContinuationsAsynchronously);
         var service = new Mock<ITagService>(MockBehavior.Strict);
         service.Setup(x => x.GetTagByIdAsync(stored.Id)).Returns(pending.Task);
@@ -37,7 +37,7 @@ public class EditTagTests
             var editable = page.FindComponent<TagInput>().Instance.Tag;
             Assert.NotSame(stored, editable);
             Assert.Equal(stored.Id, editable.Id);
-            Assert.Equal("Old School", editable.DispalyName);
+            Assert.Equal("Old School", editable.DisplayName);
             Assert.Equal("Update", page.FindComponent<MudButton>().Find("button").TextContent.Trim());
         });
     }
@@ -78,7 +78,7 @@ public class EditTagTests
     {
         // Arrange
         await using var context = new ComponentTestContext();
-        var stored = new TagModel { Id = Guid.NewGuid(), DispalyName = "Old School" };
+        var stored = new TagModel { Id = Guid.NewGuid(), DisplayName = "Old School" };
         var service = new Mock<ITagService>(MockBehavior.Strict);
         service.Setup(x => x.GetTagByIdAsync(stored.Id)).ReturnsAsync(stored);
         if (outcome == "exception")
@@ -87,7 +87,7 @@ public class EditTagTests
             service.Setup(x => x.UpdateTagAsync(stored.Id, "Traditional")).ThrowsAsync(new KeyNotFoundException("Tag not found"));
         else
             service.Setup(x => x.UpdateTagAsync(stored.Id, "Traditional")).ReturnsAsync(outcome == "success"
-                ? TagSaveResult.Success(new TagModel { Id = stored.Id, DispalyName = "Traditional" })
+                ? TagSaveResult.Success(new TagModel { Id = stored.Id, DisplayName = "Traditional" })
                 : TagSaveResult.Failure("Duplicate tag name"));
         context.Services.AddSingleton(service.Object);
         var page = context.RenderWithProviders<EditTag>(p => p.Add(x => x.TagId, stored.Id));
@@ -99,7 +99,7 @@ public class EditTagTests
         await page.FindComponent<MudButton>().Find("button").ClickAsync(new());
 
         // Assert
-        Assert.Equal("Old School", stored.DispalyName);
+        Assert.Equal("Old School", stored.DisplayName);
         service.Verify(x => x.UpdateTagAsync(stored.Id, "Traditional"), Times.Once);
         if (outcome == "success")
         {
@@ -127,7 +127,7 @@ public class EditTagTests
         // Arrange
         await using var context = new ComponentTestContext();
         var missingId = Guid.NewGuid();
-        var stored = new TagModel { Id = Guid.NewGuid(), DispalyName = "Flowers" };
+        var stored = new TagModel { Id = Guid.NewGuid(), DisplayName = "Flowers" };
         var service = new Mock<ITagService>(MockBehavior.Strict);
         service.Setup(x => x.GetTagByIdAsync(missingId)).ReturnsAsync((TagModel?)null);
         service.Setup(x => x.GetTagByIdAsync(stored.Id)).ReturnsAsync(stored);
@@ -149,7 +149,7 @@ public class EditTagTests
     {
         // Arrange
         await using var context = new ComponentTestContext();
-        var stored = new TagModel { Id = Guid.NewGuid(), DispalyName = "Flowers" };
+        var stored = new TagModel { Id = Guid.NewGuid(), DisplayName = "Flowers" };
         var service = new Mock<ITagService>(MockBehavior.Strict);
         service.Setup(x => x.GetTagByIdAsync(stored.Id)).ReturnsAsync(stored);
         service.SetupSequence(x => x.UpdateTagAsync(stored.Id, "Floral"))

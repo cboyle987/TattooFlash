@@ -5,17 +5,34 @@
 
 <MudContainer>
     <MudPaper>
-        <MudGrid>
-            <MudItem xs="12" class="d-flex justify-center">
-                <MudText Typo="Typo.h3">Add New Design</MudText>
-            </MudItem>
-        </MudGrid>
-        @if (!string.IsNullOrEmpty(_saveError))
+
+        @if (_isLoading)
         {
-            <MudAlert Severity="Severity.Error">@_saveError</MudAlert>
+            <MudProgressCircular Indeterminate="true"></MudProgressCircular>
         }
-        
-        <DesignInput Design="NewDesign" OnValidSubmit="CreateDesign" />
+        else
+        {
+
+            @if (!string.IsNullOrEmpty(_loadError))
+            {
+                <MudAlert class="mx-5" Severity="Severity.Error">@_loadError</MudAlert>
+            } else
+            {
+                <MudGrid>
+                    <MudItem xs="12" class="d-flex justify-center">
+                        <MudText Typo="Typo.h3">Add New Design</MudText>
+                    </MudItem>
+                </MudGrid>
+                @if (!string.IsNullOrEmpty(_saveError))
+                {
+                    <MudAlert Severity="Severity.Error">@_saveError</MudAlert>
+                }
+
+                <DesignInput Design="NewDesign" OnValidSubmit="CreateDesign" AvailableTags="_availableTags" />
+            }
+            
+        }
+
     </MudPaper>
 
 </MudContainer>

@@ -30,7 +30,7 @@ public class TagService(ITagRepository repository) : ITagService
         var tag = new TagModel
         {
             Id = id ?? Guid.Empty,
-            DispalyName = displayName,
+            DisplayName = displayName,
             NormalizedName = displayName.ToUpperInvariant()
         };
 

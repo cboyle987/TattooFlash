@@ -11,8 +11,13 @@
         }
     </div>
     <MudCardContent Class="flex-grow-1">
+        
         <MudText Typo="Typo.h6" Style="overflow-wrap: anywhere;">@Design.Name</MudText>
         <MudText Typo="Typo.subtitle1" Class="mt-1" Style="font-weight: 600;">£@Design.Price</MudText>
+        @foreach (var tag in Design.Tags)
+        {
+            <MudChip Size="Size.Small" T="string" Variant="Variant.Outlined" Color="Color.Primary" Class="me-1 mb-1">@tag.DisplayName</MudChip>
+        }
     </MudCardContent>
     <MudCardActions>
         <MudButton FullWidth="true" Disabled=@(!Design.IsAvailable) Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenBookingDialog">Details &amp; booking</MudButton>

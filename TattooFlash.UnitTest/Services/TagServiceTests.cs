@@ -16,7 +16,7 @@ public class TagServiceTests
     {
         // Arrange
         var expected = populated
-            ? new List<TagModel> { new() { DispalyName = "Flowers", NormalizedName = "FLOWERS" } }
+            ? new List<TagModel> { new() { DisplayName = "Flowers", NormalizedName = "FLOWERS" } }
             : [];
         _repository.Setup(r => r.GetAllTags()).ReturnsAsync(expected);
         var sut = new TagService(_repository.Object);
@@ -77,7 +77,7 @@ public class TagServiceTests
         // Arrange
         var id = Guid.NewGuid();
         TagModel? submitted = null;
-        var saved = new TagModel { Id = id, DispalyName = "Old School", NormalizedName = "OLD SCHOOL" };
+        var saved = new TagModel { Id = id, DisplayName = "Old School", NormalizedName = "OLD SCHOOL" };
         var expected = TagSaveResult.Success(saved);
         if (update)
             _repository.Setup(r => r.UpdateTag(id, It.IsAny<TagModel>()))
@@ -94,7 +94,7 @@ public class TagServiceTests
         // Assert
         Assert.Same(expected, result);
         Assert.NotNull(submitted);
-        Assert.Equal("Old School", submitted.DispalyName);
+        Assert.Equal("Old School", submitted.DisplayName);
         Assert.Equal("OLD SCHOOL", submitted.NormalizedName);
         Assert.Equal(update ? id : Guid.Empty, submitted.Id);
         Assert.Empty(submitted.Designs);
@@ -163,11 +163,11 @@ public class TagServiceTests
         var expected = TagSaveResult.Success(new TagModel { Id = id });
         if (update)
             _repository.Setup(r => r.UpdateTag(id,
-                It.Is<TagModel>(t => t.DispalyName == displayName && t.NormalizedName == normalizedName)))
+                It.Is<TagModel>(t => t.DisplayName == displayName && t.NormalizedName == normalizedName)))
                 .ReturnsAsync(expected);
         else
             _repository.Setup(r => r.CreateTag(
-                It.Is<TagModel>(t => t.DispalyName == displayName && t.NormalizedName == normalizedName)))
+                It.Is<TagModel>(t => t.DisplayName == displayName && t.NormalizedName == normalizedName)))
                 .ReturnsAsync(expected);
         var sut = new TagService(_repository.Object);
 

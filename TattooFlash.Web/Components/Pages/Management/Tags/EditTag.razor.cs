@@ -41,7 +41,7 @@ public partial class EditTag
             }
 
             // Edit a local copy so a failed save cannot rename the loaded object.
-            Tag = new TagModel { Id = stored.Id, DispalyName = stored.DispalyName };
+            Tag = new TagModel { Id = stored.Id, DisplayName = stored.DisplayName };
         }
         catch (Exception ex)
         {
@@ -59,7 +59,7 @@ public partial class EditTag
         _saveError = string.Empty;
         try
         {
-            var result = await TagService.UpdateTagAsync(TagId, tag.DispalyName);
+            var result = await TagService.UpdateTagAsync(TagId, tag.DisplayName);
             if (!result.IsSuccess)
             {
                 _saveError = result.TagSaveError;

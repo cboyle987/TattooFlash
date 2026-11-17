@@ -62,7 +62,8 @@ public class ManagementNotificationTests
         layout.WaitForAssertion(() =>
         {
             var provider = layout.FindComponent<MudSnackbarProvider>();
-            Assert.Contains(message, provider.Find("[role='alert']").TextContent);
+            var expectedRole = severity == Severity.Error ? "alert" : "status";
+            Assert.Contains(message, provider.Find($"[role='{expectedRole}']").TextContent);
             var notification = Assert.Single(context.Services.GetRequiredService<ISnackbar>().ShownSnackbars);
             Assert.Equal(message, notification.Message);
             Assert.Equal(severity, notification.Severity);
@@ -117,7 +118,8 @@ public class ManagementNotificationTests
             Assert.Equal(expectedAvailability, design.IsAvailable);
             Assert.Single(item.FindAll($"[aria-label='{(expectedAvailability ? "Available" : "Not available")}']"));
             var provider = layout.FindComponent<MudSnackbarProvider>();
-            Assert.Contains(message, provider.Find("[role='alert']").TextContent);
+            var expectedRole = severity == Severity.Error ? "alert" : "status";
+            Assert.Contains(message, provider.Find($"[role='{expectedRole}']").TextContent);
             var notification = Assert.Single(context.Services.GetRequiredService<ISnackbar>().ShownSnackbars);
             Assert.Equal(message, notification.Message);
             Assert.Equal(severity, notification.Severity);

@@ -12,12 +12,16 @@ namespace TattooFlash.Web.Components.Pages.Management.Design
 
         private string _saveError = String.Empty;
         private string _loadError = String.Empty;
+
+        private List<TagModel> _availableTags = [];
         public DesignModel? Design = default;
 
         private bool _isLoading = true;
 
         [Inject]
         public IDesignService DesignService { get; set; } = default!;
+        [Inject]
+        public ITagService TagService { get; set; } = default!;
         [Inject]
         public NavigationManager NavigationManager { get; set; } = default!;
         [Inject]
@@ -38,6 +42,7 @@ namespace TattooFlash.Web.Components.Pages.Management.Design
                     Logger.LogWarning("Design with ID {DesignId} not found.", DesignId);
                     _loadError = "Design not found.";
                 }
+                _availableTags = await TagService.GetAllTagsAsync();
             }
             catch (Exception ex)
             {
@@ -70,7 +75,7 @@ namespace TattooFlash.Web.Components.Pages.Management.Design
                     using var buffer = new MemoryStream();
                     await input.CopyToAsync(buffer);
                     buffer.Position = 0;
-                    var result = await DesignService.UpdateDesignAsync(DesignId, submission.Design, buffer);
+                    var result = await DesignService.UpdateDesignAsync(DesignId, submission.Design, buffer, submission.SelectedTagIds);
                     if (!result.IsSuccess)
                     {
                         var error = result.ImageError
@@ -82,7 +87,7 @@ namespace TattooFlash.Web.Components.Pages.Management.Design
                 }
                 else
                 {
-                    await DesignService.UpdateDesignAsync(DesignId, submission.Design, null);
+                    await DesignService.UpdateDesignAsync(DesignId, submission.Design, null, submission.SelectedTagIds);
 
                 }
                 NavigationManager.NavigateTo("/management/design");

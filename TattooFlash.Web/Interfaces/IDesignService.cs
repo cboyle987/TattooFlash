@@ -32,7 +32,7 @@ namespace TattooFlash.Web.Interfaces
         /// design's identifier is cleared. Cleanup failures are logged without replacing the save exception.
         /// </remarks>
         /// <exception cref="NotSupportedException">The recognised image cannot be decoded or the processed image cannot be encoded as WebP.</exception>
-        public Task<DesignSaveResult> CreateDesignAsync(DesignModel design, Stream imageStream);
+        public Task<DesignSaveResult> CreateDesignAsync(DesignModel design, Stream imageStream, IReadOnlyCollection<Guid> selectedTagIds);
 
         /// <summary>Updates a design, optionally processing and uploading a replacement image and deleting the previous image.</summary>
         /// <param name="id">The identifier of the existing design.</param>
@@ -51,7 +51,7 @@ namespace TattooFlash.Web.Interfaces
         /// </remarks>
         /// <exception cref="KeyNotFoundException">The repository update is attempted but the design does not exist.</exception>
         /// <exception cref="NotSupportedException">The recognised replacement image cannot be decoded or the processed image cannot be encoded as WebP.</exception>
-        public Task<DesignSaveResult> UpdateDesignAsync(Guid id, DesignModel design, Stream? imageStream);
+        public Task<DesignSaveResult> UpdateDesignAsync(Guid id, DesignModel design, Stream? imageStream, IReadOnlyCollection<Guid> selectedTagIds);
 
         /// <summary>Deletes a design's stored image and then its database record.</summary>
         /// <param name="id">The identifier of the design to delete.</param>

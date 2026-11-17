@@ -18,7 +18,7 @@ public class TagManagementNavigationTests
     {
         // Arrange
         await using var context = new ComponentTestContext();
-        var tag = new TagModel { Id = Guid.NewGuid(), DispalyName = "Flowers" };
+        var tag = new TagModel { Id = Guid.NewGuid(), DisplayName = "Flowers" };
         var pending = new TaskCompletionSource<List<TagModel>>(TaskCreationOptions.RunContinuationsAsynchronously);
         var service = new Mock<ITagService>(MockBehavior.Strict);
         service.Setup(x => x.GetAllTagsAsync()).Returns(pending.Task);

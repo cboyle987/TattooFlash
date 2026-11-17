@@ -1,7 +1,7 @@
 <MudForm Class="pa-4" @ref="_form">
     <MudGrid>
         <MudItem xs="12">
-            <MudTextField T="string" Label="Tag Name" @bind-Value="Tag.DispalyName"
+            <MudTextField T="string" Label="Tag Name" @bind-Value="Tag.DisplayName"
                           Required="true" RequiredError="Tag name is required."
                           Validation="@(new Func<string, string?>(ValidateName))"
                           Disabled="_isSaving" />

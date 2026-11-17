@@ -14,7 +14,7 @@ public class TagInputTests
     {
         // Arrange
         await using var context = new ComponentTestContext();
-        var tag = new TagModel { Id = existing ? Guid.NewGuid() : Guid.Empty, DispalyName = "Old School" };
+        var tag = new TagModel { Id = existing ? Guid.NewGuid() : Guid.Empty, DisplayName = "Old School" };
 
         // Act
         var form = context.RenderWithProviders<TagInput>(p => p.Add(x => x.Tag, tag));
@@ -35,7 +35,7 @@ public class TagInputTests
         await using var context = new ComponentTestContext();
         var submissions = new List<TagModel>();
         var form = context.RenderWithProviders<TagInput>(p => p
-            .Add(x => x.Tag, new TagModel { DispalyName = name })
+            .Add(x => x.Tag, new TagModel { DisplayName = name })
             .Add(x => x.OnValidSubmit, (TagModel tag) => submissions.Add(tag)));
 
         // Act
@@ -55,7 +55,7 @@ public class TagInputTests
         // Arrange
         await using var context = new ComponentTestContext();
         var submissions = new List<TagModel>();
-        var tag = new TagModel { DispalyName = " " + new string('a', length) + " " };
+        var tag = new TagModel { DisplayName = " " + new string('a', length) + " " };
         var form = context.RenderWithProviders<TagInput>(p => p
             .Add(x => x.Tag, tag).Add(x => x.OnValidSubmit, (TagModel submitted) => submissions.Add(submitted)));
 
@@ -90,7 +90,7 @@ public class TagInputTests
         await form.FindComponent<MudButton>().Find("button").ClickAsync(new());
 
         // Assert
-        Assert.Equal("Flowers", Assert.Single(submissions).DispalyName);
+        Assert.Equal("Flowers", Assert.Single(submissions).DisplayName);
         Assert.DoesNotContain("Tag name is required.", form.Markup);
     }
 
@@ -102,7 +102,7 @@ public class TagInputTests
         var pending = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var submissions = 0;
         var form = context.RenderWithProviders<TagInput>(p => p
-            .Add(x => x.Tag, new TagModel { DispalyName = "Flowers" })
+            .Add(x => x.Tag, new TagModel { DisplayName = "Flowers" })
             .Add(x => x.OnValidSubmit, async (TagModel _) => { submissions++; await pending.Task; }));
 
         // Act

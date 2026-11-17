@@ -38,7 +38,7 @@ namespace TattooFlash.Web.Components.Tags
             {
                 var dialogParameters = new DialogParameters
             {
-                { "Name", Tag.DispalyName }
+                { "Name", Tag.DisplayName }
             };
                 var confirmDialog = await DialogService.ShowAsync<DeleteConfirmationDialog>("Confirm Delete", dialogParameters);
                 var confirmation = await confirmDialog.Result;

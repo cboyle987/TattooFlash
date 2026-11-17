@@ -48,8 +48,8 @@ public class TagRepositoryTests : IAsyncLifetime
     public async Task GetAllTags_ReturnsTagsOrderedByNormalizedNameWithoutTracking()
     {
         // Arrange: display-name ordering intentionally differs from normalized ordering.
-        var second = new TagModel { DispalyName = "A display", NormalizedName = "ZEBRA" };
-        var first = new TagModel { DispalyName = "Z display", NormalizedName = "ANCHOR" };
+        var second = new TagModel { DisplayName = "A display", NormalizedName = "ZEBRA" };
+        var first = new TagModel { DisplayName = "Z display", NormalizedName = "ANCHOR" };
         await SeedAsync(second, first);
         var sut = new TagRepository(_factory.Object);
 
@@ -58,7 +58,7 @@ public class TagRepositoryTests : IAsyncLifetime
 
         // Assert
         Assert.Equal(new[] { first.Id, second.Id }, result.Select(t => t.Id));
-        Assert.Equal("Z display", result[0].DispalyName);
+        Assert.Equal("Z display", result[0].DisplayName);
         Assert.False(_trackedEntities);
         AssertOperationContextDisposed();
     }
@@ -96,7 +96,7 @@ public class TagRepositoryTests : IAsyncLifetime
         {
             Assert.NotNull(result);
             Assert.Equal(tag.Id, result.Id);
-            Assert.Equal("Old School", result.DispalyName);
+            Assert.Equal("Old School", result.DisplayName);
             Assert.Equal("OLD SCHOOL", result.NormalizedName);
         }
         else
@@ -124,7 +124,7 @@ public class TagRepositoryTests : IAsyncLifetime
         await using var verification = new AppDbContext(_options);
         var stored = await verification.Tags.SingleAsync();
         Assert.Equal(tag.Id, stored.Id);
-        Assert.Equal("Old School", stored.DispalyName);
+        Assert.Equal("Old School", stored.DisplayName);
         Assert.Equal("OLD SCHOOL", stored.NormalizedName);
     }
 
@@ -150,14 +150,14 @@ public class TagRepositoryTests : IAsyncLifetime
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Tag);
         Assert.Equal(existing.Id, result.Tag.Id);
-        Assert.Equal("Traditional", result.Tag.DispalyName);
+        Assert.Equal("Traditional", result.Tag.DisplayName);
         Assert.Equal("TRADITIONAL", result.Tag.NormalizedName);
         Assert.Equal(string.Empty, result.TagSaveError);
         AssertOperationContextDisposed();
         await using var verification = new AppDbContext(_options);
         var stored = await verification.Tags.Include(t => t.Designs).SingleAsync();
         Assert.Equal(existing.Id, stored.Id);
-        Assert.Equal("Traditional", stored.DispalyName);
+        Assert.Equal("Traditional", stored.DisplayName);
         Assert.Equal("TRADITIONAL", stored.NormalizedName);
         Assert.Equal(design.Id, Assert.Single(stored.Designs).Id);
     }
@@ -356,7 +356,7 @@ public class TagRepositoryTests : IAsyncLifetime
     }
 
     private static TagModel Tag(string displayName, string normalizedName) =>
-        new() { DispalyName = displayName, NormalizedName = normalizedName };
+        new() { DisplayName = displayName, NormalizedName = normalizedName };
 
     private static string GetNormalizedNameIndexName()
     {

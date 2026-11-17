@@ -87,6 +87,7 @@ public class DesignServiceTests
     public async Task SaveDesignAsync_WithImage_UploadsThenSaves(bool update)
     {
         // Arrange
+        var selectedTagIds = new List<Guid> { Guid.NewGuid(), Guid.NewGuid() };
         using var source = new MemoryStream([1]);
         using var processed = new MemoryStream([2]);
         var design = new DesignModel { Id = Guid.NewGuid(), ImageName = "old.webp" };
@@ -101,12 +102,12 @@ public class DesignServiceTests
                 .Returns(Task.CompletedTask);
         }
         else
-            _repository.Setup(x => x.CreateDesignAsync(design))
+            _repository.Setup(x => x.CreateDesignAsync(design, selectedTagIds))
                 .Callback(() => Assert.Equal("new.webp", design.ImageName)).ReturnsAsync(saved);
         var sut = CreateService();
 
         // Act
-        var result = update ? await sut.UpdateDesignAsync(design.Id, design, source) : await sut.CreateDesignAsync(design, source);
+        var result = update ? await sut.UpdateDesignAsync(design.Id, design, source) : await sut.CreateDesignAsync(design, source, selectedTagIds);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -114,6 +115,7 @@ public class DesignServiceTests
         Assert.Same(saved, result.Design);
         Assert.False(processed.CanRead);
         Assert.True(source.CanRead);
+        if (!update) _repository.Verify(x => x.CreateDesignAsync(design, selectedTagIds), Times.Once);
         _processor.Verify(x => x.ProcessImage(source), Times.Once);
         _images.Verify(x => x.UploadImage(processed, "image/webp", ".webp", CancellationToken.None), Times.Once);
         if (update) _images.Verify(x => x.DeleteImageAsync("old.webp", CancellationToken.None), Times.Once);
@@ -134,7 +136,7 @@ public class DesignServiceTests
         var failure = new InvalidOperationException("Save failed");
         ArrangeUpload(source, processed);
         if (update) _repository.Setup(x => x.UpdateDesignAsync(id, design)).ThrowsAsync(failure);
-        else _repository.Setup(x => x.CreateDesignAsync(design)).ThrowsAsync(failure);
+        else _repository.Setup(x => x.CreateDesignAsync(design, It.IsAny<IReadOnlyCollection<Guid>>())).ThrowsAsync(failure);
         var cleanup = _images.Setup(x => x.DeleteImageAsync("new.webp", CancellationToken.None));
         if (cleanupFails) cleanup.ThrowsAsync(new IOException("Cleanup failed"));
         else cleanup.Returns(Task.CompletedTask);
@@ -142,7 +144,7 @@ public class DesignServiceTests
 
         // Act
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => update
-            ? sut.UpdateDesignAsync(id, design, source) : sut.CreateDesignAsync(design, source));
+            ? sut.UpdateDesignAsync(id, design, source) : sut.CreateDesignAsync(design, source, Array.Empty<Guid>()));
 
         // Assert
         Assert.Same(failure, exception);
@@ -177,7 +179,7 @@ public class DesignServiceTests
 
         // Act
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => update
-            ? sut.UpdateDesignAsync(id, design, source) : sut.CreateDesignAsync(design, source));
+            ? sut.UpdateDesignAsync(id, design, source) : sut.CreateDesignAsync(design, source, Array.Empty<Guid>()));
 
         // Assert
         Assert.Same(failure, exception);
@@ -311,7 +313,7 @@ public class DesignServiceTests
         // Act
         var result = update
             ? await sut.UpdateDesignAsync(id, design, source)
-            : await sut.CreateDesignAsync(design, source);
+            : await sut.CreateDesignAsync(design, source, Array.Empty<Guid>());
 
         // Assert
         Assert.False(result.IsSuccess);

@@ -13,18 +13,19 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IO
     public async Task<List<DesignModel>> GetAllDesignsAsync()
     {
         await using var context = await contextFactory.CreateDbContextAsync();
-        return await context.Designs.AsNoTracking().OrderBy(d => d.Name).ToListAsync();
+        return await context.Designs.AsNoTracking().Include(x => x.Tags).OrderBy(d => d.Name).ToListAsync();
     }
 
     public async Task<DesignModel?> GetDesignByIdAsync(Guid id)
     {
         await using var context = await contextFactory.CreateDbContextAsync();
-        return await context.Designs.AsNoTracking().SingleOrDefaultAsync(d => d.Id == id);
+        return await context.Designs.AsNoTracking().Include(x => x.Tags).SingleOrDefaultAsync(d => d.Id == id);
     }
 
-    public async Task<DesignModel> CreateDesignAsync(DesignModel design)
+    public async Task<DesignModel> CreateDesignAsync(DesignModel design, IReadOnlyCollection<Guid> selectedTagIds)
     {
         await using var context = await contextFactory.CreateDbContextAsync();
+        design.Tags = await context.Tags.Where(t => selectedTagIds.Contains(t.Id)).ToListAsync();
         design.Id = Guid.NewGuid();
         design.Created = DateTime.UtcNow;
         design.Updated = DateTime.UtcNow;
@@ -33,10 +34,10 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IO
         return design;
     }
 
-    public async Task<DesignModel> UpdateDesignAsync(Guid id, DesignModel design)
+    public async Task<DesignModel> UpdateDesignAsync(Guid id, DesignModel design, IReadOnlyCollection<Guid> selectedTagIds)
     {
         await using var context = await contextFactory.CreateDbContextAsync();
-        var existing = await context.Designs.SingleOrDefaultAsync(d => d.Id == id)
+        var existing = await context.Designs.Include(x => x.Tags).SingleOrDefaultAsync(d => d.Id == id)
             ?? throw new KeyNotFoundException("Design not found");
 
         // Keep the stored identity even if the submitted model has a different ID.
@@ -44,6 +45,7 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IO
         existing.Price = design.Price;
         existing.ImageName = design.ImageName;
         existing.IsAvailable = design.IsAvailable;
+        existing.Tags = await context.Tags.Where(t => selectedTagIds.Contains(t.Id)).ToListAsync();
         existing.Updated = DateTime.UtcNow;
         await context.SaveChangesAsync();
         return existing;
@@ -79,7 +81,7 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IO
 
         var skip = (pageNumber - 1) * PageSize;
 
-        var designs = await context.Designs.AsNoTracking().OrderByDescending(x => x.Created).ThenBy(x => x.Id).Skip(skip).Take(PageSize).ToListAsync();
+        var designs = await context.Designs.AsNoTracking().Include(x => x.Tags).OrderByDescending(x => x.Created).ThenBy(x => x.Id).Skip(skip).Take(PageSize).ToListAsync();
 
         return new PaginatedDesignResults()
         {

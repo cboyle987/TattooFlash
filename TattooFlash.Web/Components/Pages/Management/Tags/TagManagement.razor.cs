@@ -26,13 +26,11 @@ namespace TattooFlash.Web.Components.Pages.Management.Tags
             try
             {
                 Tags = await TagService.GetAllTagsAsync();
-            }
-            catch (Exception ex)
+            } catch(Exception ex)
             {
                 Logger.LogError(ex, "Error loading tags");
                 loadingError = "There has been an error loading tags please try again later.";
-            }
-            finally
+            } finally
             {
                 isLoading = false;
             }

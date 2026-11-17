@@ -15,14 +15,15 @@ public interface IDesignRepository
     Task<DesignModel?> GetDesignByIdAsync(Guid id);
     /// <summary>Saves a new design, assigning a new identifier and UTC creation and update timestamps.</summary>
     /// <param name="design">The design to save. Its identifier and timestamps are set during creation.</param>
+    /// <param name="selectedTagIds">The IDs of the tags associated with the design.</param>
     /// <returns>The saved design.</returns>
-    Task<DesignModel> CreateDesignAsync(DesignModel design);
+    Task<DesignModel> CreateDesignAsync(DesignModel design, IReadOnlyCollection<Guid> selectedTagIds);
     /// <summary>Updates a design's editable fields and UTC update timestamp, preserving its identifier and creation timestamp.</summary>
     /// <param name="id">The identifier of the existing design.</param>
     /// <param name="design">The name, price, image name, and availability values to save.</param>
     /// <returns>The updated design.</returns>
     /// <exception cref="KeyNotFoundException">The design does not exist.</exception>
-    Task<DesignModel> UpdateDesignAsync(Guid id, DesignModel design);
+    Task<DesignModel> UpdateDesignAsync(Guid id, DesignModel design, IReadOnlyCollection<Guid> selectedTagIds);
     /// <summary>Deletes a design record without deleting its stored image.</summary>
     /// <param name="id">The identifier of the design to delete.</param>
     /// <returns><see langword="true"/> if a record was deleted; otherwise, <see langword="false"/>.</returns>

@@ -24,7 +24,7 @@ public partial class AddTag
         _saveError = string.Empty;
         try
         {
-            var result = await TagService.CreateTagAsync(tag.DispalyName);
+            var result = await TagService.CreateTagAsync(tag.DisplayName);
             if (!result.IsSuccess)
             {
                 _saveError = result.TagSaveError;

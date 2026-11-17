@@ -22,7 +22,7 @@ namespace TattooFlash.Web.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("DesignModelTag", b =>
+            modelBuilder.Entity("DesignModelTagModel", b =>
                 {
                     b.Property<Guid>("DesignsId")
                         .HasColumnType("uuid");
@@ -68,13 +68,13 @@ namespace TattooFlash.Web.Migrations
                     b.ToTable("Designs");
                 });
 
-            modelBuilder.Entity("TattooFlash.Web.Models.Tag", b =>
+            modelBuilder.Entity("TattooFlash.Web.Models.TagModel", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<string>("DispalyName")
+                    b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
@@ -92,7 +92,7 @@ namespace TattooFlash.Web.Migrations
                     b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("DesignModelTag", b =>
+            modelBuilder.Entity("DesignModelTagModel", b =>
                 {
                     b.HasOne("TattooFlash.Web.Models.DesignModel", null)
                         .WithMany()
@@ -100,7 +100,7 @@ namespace TattooFlash.Web.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TattooFlash.Web.Models.Tag", null)
+                    b.HasOne("TattooFlash.Web.Models.TagModel", null)
                         .WithMany()
                         .HasForeignKey("TagsId")
                         .OnDelete(DeleteBehavior.Cascade)

@@ -56,7 +56,7 @@ namespace TattooFlash.Web.Repositories
             try
             {
                 existing.NormalizedName = tag.NormalizedName;
-                existing.DispalyName = tag.DispalyName;
+                existing.DisplayName = tag.DisplayName;
 
                 await context.SaveChangesAsync();
                 return TagSaveResult.Success(existing);
