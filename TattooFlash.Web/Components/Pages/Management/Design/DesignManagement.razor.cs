@@ -28,7 +28,7 @@ namespace TattooFlash.Web.Components.Pages.Management.Design
             {
                 LoadingError = string.Empty;
                 IsLoading = true;
-                Results = await DesignService.GetPaginatedDesigns(pageNumber);
+                Results = await DesignService.GetPaginatedDesigns(pageNumber, Guid.Empty);
             }
             catch (Exception ex)
             {

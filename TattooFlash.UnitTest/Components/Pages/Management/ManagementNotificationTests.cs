@@ -28,7 +28,7 @@ public class ManagementNotificationTests
         var remaining = CreateDesign("Rose");
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         var mockConfig = new Mock<IConfiguration>();
-        service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(new PaginatedDesignResults
+        service.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).ReturnsAsync(new PaginatedDesignResults
         {
             Designs = [design, remaining],
             PageNumber = 1,
@@ -69,7 +69,7 @@ public class ManagementNotificationTests
             Assert.Equal(severity, notification.Severity);
             Assert.Equal(outcome == "error" ? 2 : 1, layout.FindComponents<DesignManagementItem>().Count);
         });
-        service.Verify(x => x.GetPaginatedDesigns(1), Times.Once);
+        service.Verify(x => x.GetPaginatedDesigns(1, Guid.Empty), Times.Once);
         service.Verify(x => x.DeleteDesignAsync(design.Id), Times.Once);
         service.VerifyNoOtherCalls();
     }
@@ -86,7 +86,7 @@ public class ManagementNotificationTests
         var design = CreateDesign(available: initiallyAvailable);
         var service = new Mock<IDesignService>(MockBehavior.Strict);
         var mockConfig = new Mock<IConfiguration>();
-        service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(new PaginatedDesignResults
+        service.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).ReturnsAsync(new PaginatedDesignResults
         {
             Designs = [design],
             PageNumber = 1,
@@ -124,7 +124,7 @@ public class ManagementNotificationTests
             Assert.Equal(message, notification.Message);
             Assert.Equal(severity, notification.Severity);
         });
-        service.Verify(x => x.GetPaginatedDesigns(1), Times.Once);
+        service.Verify(x => x.GetPaginatedDesigns(1, Guid.Empty), Times.Once);
         service.Verify(x => x.ToggleAvailabilityAsync(design.Id), Times.Once);
         service.VerifyNoOtherCalls();
     }

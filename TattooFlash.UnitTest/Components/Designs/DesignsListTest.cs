@@ -18,7 +18,7 @@ namespace TattooFlash.UnitTest.Components.Designs
             // Arrange
             var pending = CreatePendingRequest();
             var designService = new Mock<IDesignService>(MockBehavior.Strict);
-            designService.Setup(x => x.GetPaginatedDesigns(1)).Returns(pending.Task);
+            designService.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).Returns(pending.Task);
             await using var context = CreateContext(designService);
 
             // Act
@@ -42,7 +42,7 @@ namespace TattooFlash.UnitTest.Components.Designs
             // Arrange
             var results = CreatePage(1, totalItems: 4, pageSize: 12);
             var designService = new Mock<IDesignService>(MockBehavior.Strict);
-            designService.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(results);
+            designService.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).ReturnsAsync(results);
             await using var context = CreateContext(designService);
 
             // Act
@@ -59,7 +59,7 @@ namespace TattooFlash.UnitTest.Components.Designs
         {
             // Arrange
             var designService = new Mock<IDesignService>(MockBehavior.Strict);
-            designService.Setup(x => x.GetPaginatedDesigns(1))
+            designService.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty))
                 .ThrowsAsync(new InvalidOperationException("Test error"));
             await using var context = CreateContext(designService);
 
@@ -75,7 +75,7 @@ namespace TattooFlash.UnitTest.Components.Designs
         {
             // Arrange
             var designService = new Mock<IDesignService>(MockBehavior.Strict);
-            designService.Setup(x => x.GetPaginatedDesigns(1))
+            designService.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty))
                 .ReturnsAsync(CreatePage(1, totalItems: 0));
             await using var context = CreateContext(designService);
 
@@ -99,8 +99,8 @@ namespace TattooFlash.UnitTest.Components.Designs
             var secondPage = CreatePage(2);
             var pending = CreatePendingRequest();
             var designService = new Mock<IDesignService>(MockBehavior.Strict);
-            designService.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(firstPage);
-            designService.Setup(x => x.GetPaginatedDesigns(2)).Returns(pending.Task);
+            designService.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).ReturnsAsync(firstPage);
+            designService.Setup(x => x.GetPaginatedDesigns(2, Guid.Empty)).Returns(pending.Task);
             await using var context = CreateContext(designService);
             var page = context.RenderWithProviders<DesignsList>();
             var pagination = page.FindComponent<MudPagination>();
@@ -135,17 +135,59 @@ namespace TattooFlash.UnitTest.Components.Designs
                     Assert.Equal(2, page.FindComponent<MudPagination>().Instance.GetState(x => x.Count));
                 }
             });
-            designService.Verify(x => x.GetPaginatedDesigns(1), Times.Once);
-            designService.Verify(x => x.GetPaginatedDesigns(2), Times.Once);
+            designService.Verify(x => x.GetPaginatedDesigns(1, Guid.Empty), Times.Once);
+            designService.Verify(x => x.GetPaginatedDesigns(2, Guid.Empty), Times.Once);
+            designService.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task WhenTagChangesThenPagingResetsAndSubsequentPagesKeepTheFilter()
+        {
+            // Arrange
+            var tag = new TagModel { Id = Guid.NewGuid(), DisplayName = "Flowers", NormalizedName = "FLOWERS" };
+            var firstPage = CreatePage(1);
+            var secondPage = CreatePage(2);
+            var firstFilteredPage = CreatePage(1);
+            var secondFilteredPage = CreatePage(2);
+            var designService = new Mock<IDesignService>(MockBehavior.Strict);
+            designService.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).ReturnsAsync(firstPage);
+            designService.Setup(x => x.GetPaginatedDesigns(2, Guid.Empty)).ReturnsAsync(secondPage);
+            designService.Setup(x => x.GetPaginatedDesigns(1, tag.Id)).ReturnsAsync(firstFilteredPage);
+            designService.Setup(x => x.GetPaginatedDesigns(2, tag.Id)).ReturnsAsync(secondFilteredPage);
+            await using var context = CreateContext(designService, [tag]);
+            var page = context.RenderWithProviders<DesignsList>();
+
+            await page.InvokeAsync(() => page.FindComponent<MudPagination>().Instance.SelectedChanged.InvokeAsync(2));
+            AssertCards(page, secondPage.Designs);
+
+            // Act and assert
+            await page.InvokeAsync(() => page.FindComponent<MudChipSet<Guid>>().Instance.SelectedValueChanged.InvokeAsync(tag.Id));
+            AssertCards(page, firstFilteredPage.Designs);
+            Assert.Equal(1, page.FindComponent<MudPagination>().Instance.GetState(x => x.Selected));
+
+            await page.InvokeAsync(() => page.FindComponent<MudPagination>().Instance.SelectedChanged.InvokeAsync(2));
+            AssertCards(page, secondFilteredPage.Designs);
+
+            await page.InvokeAsync(() => page.FindComponent<MudChipSet<Guid>>().Instance.SelectedValueChanged.InvokeAsync(Guid.Empty));
+            AssertCards(page, firstPage.Designs);
+            Assert.Equal(1, page.FindComponent<MudPagination>().Instance.GetState(x => x.Selected));
+
+            designService.Verify(x => x.GetPaginatedDesigns(1, Guid.Empty), Times.Exactly(2));
+            designService.Verify(x => x.GetPaginatedDesigns(2, Guid.Empty), Times.Once);
+            designService.Verify(x => x.GetPaginatedDesigns(1, tag.Id), Times.Once);
+            designService.Verify(x => x.GetPaginatedDesigns(2, tag.Id), Times.Once);
             designService.VerifyNoOtherCalls();
         }
 
         // Each test owns and asynchronously disposes its context; no state is shared between tests.
-        private static ComponentTestContext CreateContext(Mock<IDesignService> designService)
+        private static ComponentTestContext CreateContext(Mock<IDesignService> designService, List<TagModel>? tags = null)
         {
             var context = new ComponentTestContext();
             context.Services.AddSingleton(designService.Object);
             context.Services.AddSingleton(Mock.Of<IImageService>());
+            var tagService = new Mock<ITagService>(MockBehavior.Strict);
+            tagService.Setup(x => x.GetAllTagsAsync()).ReturnsAsync(tags ?? []);
+            context.Services.AddSingleton(tagService.Object);
             return context;
         }
 

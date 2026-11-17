@@ -8,7 +8,10 @@ namespace TattooFlash.Web.Services;
 public class DesignService(IDesignRepository repository, IImageProcessingService imageProcessingService, IImageService imageService, ILogger<DesignService> logger) : IDesignService
 {
 
-    public Task<List<DesignModel>> GetAllDesignsAsync() => repository.GetAllDesignsAsync();
+    public Task<List<DesignModel>> GetAllDesignsAsync(Guid SelectedTagId)
+    {
+        return repository.GetAllDesignsAsync(SelectedTagId);
+    }
 
     public Task<DesignModel?> GetDesignByIdAsync(Guid id) => repository.GetDesignByIdAsync(id);
 
@@ -115,9 +118,9 @@ public class DesignService(IDesignRepository repository, IImageProcessingService
 
     public Task ToggleAvailabilityAsync(Guid id) => repository.ToggleAvailabilityAsync(id);
 
-    public Task<PaginatedDesignResults> GetPaginatedDesigns(int pageNumber)
+    public Task<PaginatedDesignResults> GetPaginatedDesigns(int pageNumber, Guid selectedTagId)
     {
-        return repository.GetDesignsAsync(pageNumber);
+        return repository.GetDesignsAsync(pageNumber, selectedTagId);
     }
 
     public async Task HandleImageRollbackAsync(string resultFilename, string originalFilename, DesignModel design)

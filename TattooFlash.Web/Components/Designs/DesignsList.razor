@@ -6,8 +6,21 @@
         @if (!string.IsNullOrEmpty(_loadError))
         {
             <MudAlert Severity="Severity.Error">@_loadError</MudAlert>
-        } else
+        }
+        else
         {
+
+            <MudItem xs="12" md="12">
+                <MudChipSet T="Guid" @bind-SelectedValue="_selectedTagId" CheckMark SelectionMode="SelectionMode.ToggleSelection" Class="mb-4" @bind-SelectedValue:after="OnFilterChanged">
+                    <MudChip Value="@Guid.Empty">All</MudChip>
+                    @foreach (var tag in _tags)
+                    {
+                        <MudChip Value="@tag.Id">@tag.DisplayName</MudChip>
+                    }
+                </MudChipSet>
+            </MudItem>
+
+
             foreach (var design in Results.Designs)
             {
                 <MudItem xs="12" sm="6" md="4" lg="3" Class="d-flex">
@@ -25,11 +38,12 @@
                                        Disabled="@_Loading"
                                        Color="Color.Primary" />
                     </div>
-                </MudItem>       
+                </MudItem>
             }
         }
-        
-    } else
+
+    }
+    else
     {
         foreach (var i in Enumerable.Range(0, 4))
         {

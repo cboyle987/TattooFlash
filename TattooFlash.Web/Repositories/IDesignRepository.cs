@@ -8,7 +8,7 @@ public interface IDesignRepository
 {
     /// <summary>Retrieves all designs ordered by name without tracking changes.</summary>
     /// <returns>All designs, or an empty list when none exist.</returns>
-    Task<List<DesignModel>> GetAllDesignsAsync();
+    Task<List<DesignModel>> GetAllDesignsAsync(Guid SelectedTagId);
     /// <summary>Retrieves a design without tracking changes.</summary>
     /// <param name="id">The design identifier.</param>
     /// <returns>The matching design, or <see langword="null"/> when it does not exist.</returns>
@@ -38,5 +38,5 @@ public interface IDesignRepository
     /// <param name="pageNumber">The one-based page number to retrieve.</param>
     /// <returns>The requested designs, total design count, page number, and configured page size. Pages beyond the available results contain no designs.</returns>
     /// <exception cref="ArgumentException">The page number is less than one.</exception>
-    Task<PaginatedDesignResults> GetDesignsAsync(int pageNumber);
+    Task<PaginatedDesignResults> GetDesignsAsync(int pageNumber, Guid selectedTagId);
 }

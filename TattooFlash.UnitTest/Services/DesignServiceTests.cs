@@ -20,15 +20,15 @@ public class DesignServiceTests
     {
         // Arrange
         var expected = new List<DesignModel> { new() };
-        _repository.Setup(x => x.GetAllDesignsAsync()).ReturnsAsync(expected);
+        _repository.Setup(x => x.GetAllDesignsAsync(Guid.Empty)).ReturnsAsync(expected);
         var sut = CreateService();
 
         // Act
-        var result = await sut.GetAllDesignsAsync();
+        var result = await sut.GetAllDesignsAsync(Guid.Empty);
 
         // Assert
         Assert.Same(expected, result);
-        _repository.Verify(x => x.GetAllDesignsAsync(), Times.Once);
+        _repository.Verify(x => x.GetAllDesignsAsync(Guid.Empty), Times.Once);
     }
 
     [Theory]
@@ -50,20 +50,23 @@ public class DesignServiceTests
         _repository.Verify(x => x.GetDesignByIdAsync(id), Times.Once);
     }
 
-    [Fact]
-    public async Task GetPaginatedDesigns_ForwardsPageNumberAndReturnsResult()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task GetPaginatedDesigns_ForwardsPageNumberAndSelectedTagAndReturnsResult(bool filterByTag)
     {
         // Arrange
         var expected = new PaginatedDesignResults { PageNumber = 3, PageSize = 12 };
-        _repository.Setup(x => x.GetDesignsAsync(3)).ReturnsAsync(expected);
+        var selectedTagId = filterByTag ? Guid.NewGuid() : Guid.Empty;
+        _repository.Setup(x => x.GetDesignsAsync(3, selectedTagId)).ReturnsAsync(expected);
         var sut = CreateService();
 
         // Act
-        var result = await sut.GetPaginatedDesigns(3);
+        var result = await sut.GetPaginatedDesigns(3, selectedTagId);
 
         // Assert
         Assert.Same(expected, result);
-        _repository.Verify(x => x.GetDesignsAsync(3), Times.Once);
+        _repository.Verify(x => x.GetDesignsAsync(3, selectedTagId), Times.Once);
     }
 
     [Fact]

@@ -10,10 +10,18 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IO
 {
     private readonly int PageSize = paginationOptions.Value.DefaultPageSize;
 
-    public async Task<List<DesignModel>> GetAllDesignsAsync()
+    public async Task<List<DesignModel>> GetAllDesignsAsync(Guid SelectedTagId)
     {
         await using var context = await contextFactory.CreateDbContextAsync();
-        return await context.Designs.AsNoTracking().Include(x => x.Tags).OrderBy(d => d.Name).ToListAsync();
+        var designsQuerable = context.Designs.AsNoTracking();
+
+        if(SelectedTagId != Guid.Empty)
+        {
+            designsQuerable = designsQuerable.Where(x => x.Tags.Any(tag => tag.Id == SelectedTagId));
+        }
+
+
+        return await designsQuerable.Include(x => x.Tags).ToListAsync();
     }
 
     public async Task<DesignModel?> GetDesignByIdAsync(Guid id)
@@ -68,7 +76,7 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IO
             throw new KeyNotFoundException("Design not found");
     }
 
-    public async Task<PaginatedDesignResults> GetDesignsAsync(int pageNumber)
+    public async Task<PaginatedDesignResults> GetDesignsAsync(int pageNumber, Guid selectedTagId)
     {
         if (pageNumber < 1)
         {
@@ -77,11 +85,19 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IO
 
         await using var context = await contextFactory.CreateDbContextAsync();
 
-        var totalItems = await context.Designs.AsNoTracking().CountAsync();
+        
 
         var skip = (pageNumber - 1) * PageSize;
 
-        var designs = await context.Designs.AsNoTracking().Include(x => x.Tags).OrderByDescending(x => x.Created).ThenBy(x => x.Id).Skip(skip).Take(PageSize).ToListAsync();
+        var designsQuerable = context.Designs.AsNoTracking();
+
+        if(selectedTagId != Guid.Empty)
+        {
+            designsQuerable = designsQuerable.Where(x => x.Tags.Any(tag => tag.Id == selectedTagId));
+        }
+
+        var designs = await designsQuerable.Include(x => x.Tags).OrderByDescending(x => x.Created).ThenBy(x => x.Id).Skip(skip).Take(PageSize).ToListAsync();
+        var totalItems = await designsQuerable.CountAsync();
 
         return new PaginatedDesignResults()
         {

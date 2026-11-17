@@ -53,10 +53,28 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository();
 
         // Act
-        var result = await sut.GetAllDesignsAsync();
+        var result = await sut.GetAllDesignsAsync(Guid.Empty);
 
         // Assert
         Assert.Equal(new[] { anchor.Id, zebra.Id }, result.Select(x => x.Id));
+        AssertReadContextWasUntrackedAndDisposed();
+    }
+
+    [Fact]
+    public async Task GetAllDesignsAsync_WithSelectedTag_ReturnsOnlyMatchingDesigns()
+    {
+        // Arrange
+        var selected = new TagModel { DisplayName = "Flowers", NormalizedName = "FLOWERS" };
+        var matching = Design("Rose");
+        matching.Tags = [selected];
+        await SeedAsync(Design("Anchor"), matching);
+        var sut = CreateRepository();
+
+        // Act
+        var result = await sut.GetAllDesignsAsync(selected.Id);
+
+        // Assert
+        Assert.Equal(matching.Id, Assert.Single(result).Id);
         AssertReadContextWasUntrackedAndDisposed();
     }
 
@@ -67,7 +85,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository();
 
         // Act
-        var result = await sut.GetAllDesignsAsync();
+        var result = await sut.GetAllDesignsAsync(Guid.Empty);
 
         // Assert
         Assert.Empty(result);
@@ -352,7 +370,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository(2);
 
         // Act
-        var result = await sut.GetDesignsAsync(page);
+        var result = await sut.GetDesignsAsync(page, Guid.Empty);
 
         // Assert
         Assert.Equal(expectedCount, result.Designs.Count);
@@ -364,13 +382,60 @@ public class DesignRepositoryTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task GetDesignsAsync_WithSelectedTag_FiltersBeforePagingAndLoadsAllTags()
+    {
+        // Arrange
+        var selected = new TagModel { DisplayName = "Flowers", NormalizedName = "FLOWERS" };
+        var other = new TagModel { DisplayName = "Traditional", NormalizedName = "TRADITIONAL" };
+        var newest = Design("Anchor");
+        newest.Created = OriginalTimestamp.AddDays(2);
+        newest.Tags = [other];
+        var firstMatch = Design("Rose");
+        firstMatch.Created = OriginalTimestamp.AddDays(1);
+        firstMatch.Tags = [selected];
+        var secondMatch = Design("Peony");
+        secondMatch.Tags = [selected, other];
+        await SeedAsync(newest, firstMatch, secondMatch);
+        var sut = CreateRepository(pageSize: 1);
+
+        // Act
+        var result = await sut.GetDesignsAsync(2, selected.Id);
+
+        // Assert
+        Assert.Equal(2, result.TotalItems);
+        Assert.Equal(2, result.TotalPages);
+        Assert.Equal(2, result.PageNumber);
+        var design = Assert.Single(result.Designs);
+        Assert.Equal(secondMatch.Id, design.Id);
+        Assert.Equal(new[] { selected.Id, other.Id }.OrderBy(id => id),
+            design.Tags.Select(tag => tag.Id).OrderBy(id => id));
+        AssertReadContextWasUntrackedAndDisposed();
+    }
+
+    [Fact]
+    public async Task GetDesignsAsync_WhenSelectedTagHasNoMatches_ReturnsEmptyPage()
+    {
+        // Arrange
+        await SeedAsync(Design("Anchor"));
+        var sut = CreateRepository();
+
+        // Act
+        var result = await sut.GetDesignsAsync(1, Guid.NewGuid());
+
+        // Assert
+        Assert.Empty(result.Designs);
+        Assert.Equal(0, result.TotalItems);
+        Assert.Equal(0, result.TotalPages);
+    }
+
+    [Fact]
     public async Task GetDesignsAsync_WhenEmpty_ReturnsEmptyPageWithMetadata()
     {
         // Arrange
         var sut = CreateRepository(3);
 
         // Act
-        var result = await sut.GetDesignsAsync(1);
+        var result = await sut.GetDesignsAsync(1, Guid.Empty);
 
         // Assert
         Assert.Empty(result.Designs);
@@ -388,7 +453,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository();
 
         // Act
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => sut.GetDesignsAsync(page));
+        var exception = await Assert.ThrowsAsync<ArgumentException>(() => sut.GetDesignsAsync(page, Guid.Empty));
 
         // Assert
         Assert.Equal("Invalid page number", exception.Message);
@@ -406,7 +471,7 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository(1);
 
         // Act
-        var result = await sut.GetDesignsAsync(2);
+        var result = await sut.GetDesignsAsync(2, Guid.Empty);
 
         // Assert
         Assert.Equal(second.Id, Assert.Single(result.Designs).Id);
@@ -424,8 +489,8 @@ public class DesignRepositoryTests : IAsyncLifetime
         var sut = CreateRepository();
 
         // Act
-        await sut.GetAllDesignsAsync();
-        await sut.GetAllDesignsAsync();
+        await sut.GetAllDesignsAsync(Guid.Empty);
+        await sut.GetAllDesignsAsync(Guid.Empty);
 
         // Assert
         Assert.Equal(2, _operationContexts.Count);

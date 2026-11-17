@@ -32,7 +32,7 @@ public class DesignManagementTests
         }).ToList();
         var pending = new TaskCompletionSource<PaginatedDesignResults>(TaskCreationOptions.RunContinuationsAsynchronously);
         var service = new Mock<IDesignService>(MockBehavior.Strict);
-        service.Setup(x => x.GetPaginatedDesigns(1)).Returns(pending.Task);
+        service.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).Returns(pending.Task);
         await using var context = CreateContext(service);
         var page = context.RenderWithProviders<DesignManagement>();
         AssertLoading(page);
@@ -56,7 +56,7 @@ public class DesignManagementTests
             else
                 Assert.Empty(page.FindComponents<MudPagination>());
         });
-        service.Verify(x => x.GetPaginatedDesigns(1), Times.Once);
+        service.Verify(x => x.GetPaginatedDesigns(1, Guid.Empty), Times.Once);
     }
 
     [Fact]
@@ -67,14 +67,14 @@ public class DesignManagementTests
         var second = CreateDesign("Rose");
         var pending = new TaskCompletionSource<PaginatedDesignResults>(TaskCreationOptions.RunContinuationsAsynchronously);
         var service = new Mock<IDesignService>(MockBehavior.Strict);
-        service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(new PaginatedDesignResults
+        service.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).ReturnsAsync(new PaginatedDesignResults
         {
             Designs = [first],
             TotalItems = 2,
             PageSize = 1,
             PageNumber = 1
         });
-        service.Setup(x => x.GetPaginatedDesigns(2)).Returns(pending.Task);
+        service.Setup(x => x.GetPaginatedDesigns(2, Guid.Empty)).Returns(pending.Task);
         await using var context = CreateContext(service);
         var page = context.RenderWithProviders<DesignManagement>();
         Assert.Same(first, page.FindComponent<DesignManagementItem>().Instance.Design);
@@ -93,7 +93,7 @@ public class DesignManagementTests
             Assert.Equal(2, page.FindComponent<MudPagination>().Instance.GetState(x => x.Selected));
             Assert.Empty(page.FindComponents<SkeletonManagementItem>());
         });
-        service.Verify(x => x.GetPaginatedDesigns(2), Times.Once);
+        service.Verify(x => x.GetPaginatedDesigns(2, Guid.Empty), Times.Once);
     }
 
     [Fact]
@@ -101,7 +101,7 @@ public class DesignManagementTests
     {
         // Arrange
         var service = new Mock<IDesignService>(MockBehavior.Strict);
-        service.SetupSequence(x => x.GetPaginatedDesigns(1))
+        service.SetupSequence(x => x.GetPaginatedDesigns(1, Guid.Empty))
             .ThrowsAsync(new InvalidOperationException("Load failed"))
             .ReturnsAsync(new PaginatedDesignResults { PageNumber = 1, PageSize = 2 });
         await using var context = CreateContext(service);
@@ -119,7 +119,7 @@ public class DesignManagementTests
         // Assert
         Assert.Empty(page.FindComponents<MudAlert>());
         Assert.Equal("/management/design/add", page.Find("a").GetAttribute("href"));
-        service.Verify(x => x.GetPaginatedDesigns(1), Times.Exactly(2));
+        service.Verify(x => x.GetPaginatedDesigns(1, Guid.Empty), Times.Exactly(2));
     }
 
     [Theory]
@@ -138,7 +138,7 @@ public class DesignManagementTests
             PageNumber = 1
         };
         var service = new Mock<IDesignService>(MockBehavior.Strict);
-        service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(results);
+        service.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).ReturnsAsync(results);
         await using var context = CreateContext(service);
         var page = context.RenderWithProviders<DesignManagement>();
         var child = page.FindComponents<DesignManagementItem>().Single(x => x.Instance.Design.Id == deleted.Id);
@@ -174,7 +174,7 @@ public class DesignManagementTests
         var design = CreateDesign(available: available);
         var other = CreateDesign("Rose");
         var service = new Mock<IDesignService>(MockBehavior.Strict);
-        service.Setup(x => x.GetPaginatedDesigns(1)).ReturnsAsync(new PaginatedDesignResults
+        service.Setup(x => x.GetPaginatedDesigns(1, Guid.Empty)).ReturnsAsync(new PaginatedDesignResults
         {
             Designs = [design, other],
             PageNumber = 1,
@@ -192,7 +192,7 @@ public class DesignManagementTests
         Assert.Equal(found ? !available : available, design.IsAvailable);
         Assert.True(other.IsAvailable);
         Assert.Equal(2, page.Instance.Results.TotalItems);
-        service.Verify(x => x.GetPaginatedDesigns(1), Times.Once);
+        service.Verify(x => x.GetPaginatedDesigns(1, Guid.Empty), Times.Once);
         service.VerifyNoOtherCalls();
     }
 

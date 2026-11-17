@@ -7,12 +7,12 @@ namespace TattooFlash.Web.Interfaces
     {
         /// <summary>Retrieves all designs ordered by name.</summary>
         /// <returns>All designs, or an empty list when none exist.</returns>
-        public Task<List<DesignModel>> GetAllDesignsAsync();
+        public Task<List<DesignModel>> GetAllDesignsAsync(Guid selectedTagId);
         /// <summary>Retrieves a page of designs, ordered newest first with ID as a tie-breaker.</summary>
         /// <param name="pageNumber">The one-based page number to retrieve.</param>
         /// <returns>The requested designs and pagination metadata, using the configured page size.</returns>
         /// <exception cref="ArgumentException">The page number is less than one.</exception>
-        public Task<PaginatedDesignResults> GetPaginatedDesigns(int pageNumber);
+        public Task<PaginatedDesignResults> GetPaginatedDesigns(int pageNumber, Guid selectedTagId);
 
         /// <summary>Retrieves a design by its identifier.</summary>
         /// <param name="id">The design identifier.</param>
