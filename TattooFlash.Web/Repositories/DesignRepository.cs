@@ -21,7 +21,7 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IO
         }
 
 
-        return await designsQuerable.Include(x => x.Tags).ToListAsync();
+        return await designsQuerable.Include(x => x.Tags).OrderBy(x => x.Name).ToListAsync();
     }
 
     public async Task<DesignModel?> GetDesignByIdAsync(Guid id)
