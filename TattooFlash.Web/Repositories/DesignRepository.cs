@@ -15,7 +15,7 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IO
         await using var context = await contextFactory.CreateDbContextAsync();
         var designsQuerable = context.Designs.AsNoTracking();
 
-        if(SelectedTagId != Guid.Empty)
+        if (SelectedTagId != Guid.Empty)
         {
             designsQuerable = designsQuerable.Where(x => x.Tags.Any(tag => tag.Id == SelectedTagId));
         }
@@ -85,13 +85,13 @@ public class DesignRepository(IDbContextFactory<AppDbContext> contextFactory, IO
 
         await using var context = await contextFactory.CreateDbContextAsync();
 
-        
+
 
         var skip = (pageNumber - 1) * PageSize;
 
         var designsQuerable = context.Designs.AsNoTracking();
 
-        if(selectedTagId != Guid.Empty)
+        if (selectedTagId != Guid.Empty)
         {
             designsQuerable = designsQuerable.Where(x => x.Tags.Any(tag => tag.Id == selectedTagId));
         }
