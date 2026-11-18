@@ -7,10 +7,10 @@ local PostgreSQL dependency and places that service behind the optional
 `local-postgres` profile. Visual Studio also explicitly marks PostgreSQL as
 `DoNotStart` in the Docker Compose launch profile.
 
-For staging releases, see [GitHub Actions staging deployment](github-actions-staging-deployment.md).
-The [manual deployment guide](manual-staging-deployment.md) remains available as a fallback.
-Initial provisioning is covered in [One-time staging environment setup](staging-environment-setup.md).
-The staging deployment does not use the development override and retains its own PostgreSQL service.
+For releases and the manual fallback, see [Deployment](deployment.md).
+Infrastructure provisioning is covered in [Shared VPS setup](shared-vps-compose.md).
+Server deployments do not use the development override and have separate
+PostgreSQL services for staging and production.
 
 ## Configure local development with the NAS database
 
@@ -101,63 +101,29 @@ dotnet tool install --global dotnet-ef --version 10.0.13
 To align an existing global installation, use
 `dotnet tool update --global dotnet-ef --version 10.0.13`.
 
-### 3. Supply the NAS connection and apply existing migrations
+### 3. Confirm configuration and apply existing migrations
 
-The design-time `AppDbContextFactory` reads
-`ConnectionStrings__DefaultConnection` from the environment. It does **not** load
-the app's user secrets automatically. Without this variable it uses placeholder
-credentials for generating migrations and bundles, which cannot update a real
-database. Setting only `ASPNETCORE_ENVIRONMENT=Development` does not change that.
+The design-time `AppDbContextFactory` reads the web project's user secrets and
+then environment variables. An existing `ConnectionStrings__DefaultConnection`
+environment variable overrides the user-secret connection string. Without either,
+it uses placeholder credentials for generating migrations and bundles; these
+cannot update a real database.
 
-In the same PowerShell session at the repository root, run this block. Enter the
-NAS development database password at the credential prompt. The connection-string
-builder handles passwords containing connection-string punctuation without
-printing the password or putting it in command history or process arguments.
+Confirm your user secrets target the NAS development database and that no stale
+environment override points elsewhere. From the repository root:
 
 ```powershell
-$localDbCredential = Get-Credential -UserName 'tattooflash_user' -Message 'NAS development database password'
-$localDbConnection = New-Object System.Data.Common.DbConnectionStringBuilder
-$localDbConnection['Host'] = Read-Host 'NAS development database hostname or IP'
-$localDbConnection['Port'] = Read-Host 'NAS PostgreSQL published port'
-$localDbConnection['Database'] = 'tattooflash'
-$localDbConnection['Username'] = $localDbCredential.UserName
-$localDbConnection['Password'] = $localDbCredential.GetNetworkCredential().Password
-$localDbConnection['GSS Encryption Mode'] = 'Disable'
-
-$previousDbConnection = [Environment]::GetEnvironmentVariable('ConnectionStrings__DefaultConnection', 'Process')
-try {
-    $env:ConnectionStrings__DefaultConnection = $localDbConnection.ConnectionString
-    dotnet ef database update --project TattooFlash.Web/TattooFlash.Web.csproj --startup-project TattooFlash.Web/TattooFlash.Web.csproj
-    if ($LASTEXITCODE -ne 0) {
-        throw 'Applying local EF migrations failed; inspect the error above.'
-    }
-}
-finally {
-    if ($null -eq $previousDbConnection) {
-        Remove-Item Env:ConnectionStrings__DefaultConnection -ErrorAction SilentlyContinue
-    }
-    else {
-        $env:ConnectionStrings__DefaultConnection = $previousDbConnection
-    }
-    Remove-Variable localDbCredential, localDbConnection, previousDbConnection
-}
+dotnet ef database update --project TattooFlash.Web/TattooFlash.Web.csproj --startup-project TattooFlash.Web/TattooFlash.Web.csproj
 ```
 
-The explicit project and startup-project arguments select the web project rather
-than relying on solution or Visual Studio startup-project selection. The factory
-is discovered automatically; no `Program.cs` changes are needed.
-
-Expect existing migration IDs to be applied followed by `Done.`, or a message
-that the database is already up to date. This applies migrations already in the
-repository; it does not generate a migration from uncommitted model changes.
-After changing the model, create and review an appropriate migration separately
-before updating the database. Do not edit previously applied migrations.
+Expect the existing migrations to be applied, or a message that the database is
+already up to date. This applies migrations in the repository; it does not generate
+one from model changes. Create and inspect migrations separately, and do not edit
+previously applied migrations.
 
 ### 4. Verify the result
 
-Connect your database client to the same NAS development database.
-
-Run:
+Connect your database client to the same development database and inspect:
 
 ```sql
 SELECT "MigrationId", "ProductVersion"
@@ -165,30 +131,23 @@ FROM "__EFMigrationsHistory"
 ORDER BY "MigrationId";
 ```
 
-The initial migrations are
-`20261021192717_InitialCreate` and `20261031190214_AddDesignTimeStamps`; include
-any newer IDs present in the repository. Then check the affected feature in the
-local app. A successful history query does not prove application behaviour.
+Compare the IDs with the migrations in `TattooFlash.Web/Migrations/`, then check
+the affected feature in the app. Migration history alone does not prove runtime
+behaviour.
 
 ### Migration troubleshooting
 
-- **Connection refused:** check the NAS PostgreSQL container is running, its port
-  is published, and the NAS firewall allows connections from your development machine.
-- **Password authentication failed:** use the NAS database credentials. The local
-  Compose `.env` does not set the NAS password. Do not print connection strings.
-- **Placeholder credentials or `tattooflash_design_time` appears:** the EF
-  process did not receive the environment variable. Run the connection setup
-  and migration command in the same PowerShell session.
-- **Database is up to date but the app still reports missing tables:** confirm
-  EF and the app target the same NAS host, port, and database. EF uses the
-  temporary environment variable; the app uses its mounted user secrets.
-- **Fresh-database history query or missing Kerberos library message:** an
-  initial history-table query may fail before EF creates it. Judge the final
-  exit status and history rows. `GSS Encryption Mode=Disable` in the example
-  suppresses Npgsql's optional Kerberos probe for this password-based setup.
-
-See [EF CLI commands](https://learn.microsoft.com/en-us/ef/core/cli/dotnet)
-and [design-time context creation](https://learn.microsoft.com/en-us/ef/core/cli/dbcontext-creation).
+- **Connection refused:** check the NAS database is running, its port is published,
+  and its firewall allows the development machine.
+- **Password authentication failed:** use the NAS credentials. The local Compose
+  `.env` does not set that database's password.
+- **Placeholder database appears:** configure the web project's user secrets or
+  the environment variable for the EF process.
+- **App and EF disagree about the schema:** check both connection sources and
+  remove stale environment overrides. The app container uses mounted user secrets.
+- **Missing Kerberos library message:** for password-based development connections,
+  `GSS Encryption Mode=Disable` suppresses Npgsql's optional Kerberos probe. Judge
+  migration success from the exit status and migration history.
 
 ## Trust Caddy's local HTTPS certificate on Windows
 

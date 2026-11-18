@@ -41,8 +41,8 @@ owner's behalf.
 - `TattooFlash.Web/Models/`: domain models.
 - `TattooFlash.Web/Data/`: EF Core database context.
 - `TattooFlash.Web/Migrations/`: EF Core migrations and model snapshot.
-- `TattooFlash.Web/wwwroot/samples/`: current local design images.
-- `docs/`: reference material and proposed feature designs.
+- `TattooFlash.Web/wwwroot/samples/`: legacy sample image assets; catalogue uploads use Cloudflare R2.
+- `docs/`: current local development, VPS setup, and deployment guides.
 - `scripts/`: development helpers, including trusting Caddy's local CA on Windows.
   `Deploy.sh` is the source for the separately installed, root-owned VPS
   deployment command; workflow runs do not update that installed copy.
@@ -114,24 +114,18 @@ and access to PostgreSQL. Use .NET user secrets or environment variables for cre
 
 ## Reference documents
 
-- `docs/shared-vps-compose.md`: new shared-VPS Compose layout and transition
-  prerequisites, automatic staging deployment, and manual production promotion.
+- `README.md`: project overview, implemented features, architecture, and direct
+  .NET development setup.
+- `docs/shared-vps-compose.md`: shared-VPS Compose layout, infrastructure
+  provisioning, protected configuration, and backup locations.
 - `docs/container-development.md`: current container development setup and usage of
   `scripts/Trust-CaddyLocalCertificate.ps1` for Windows certificate trust.
-- `docs/manual-staging-deployment.md`: manual GHCR build, migration bundle, and
-  IONOS staging deployment fallback.
-- `docs/github-actions-staging-deployment.md`: implemented version-tag CI/CD,
-  GitHub environment setup, protected server files, and recovery procedures.
-- `docs/staging-environment-setup.md`: one-time VPS, registry authentication,
-  external services, and staging secret configuration.
-- `docs/ef-core-cheatsheet.md`: EF Core reference.
-- `docs/design-tags-ef-core.md`: proposed tag feature; examples use integer keys,
-  while the current design model uses `Guid`. Adapt examples to the actual model.
-- `docs/image-uploads-r2.md`: proposed Cloudflare R2 upload flow. Current images are
-  served from local samples; R2 uploads are not implemented.
+- `docs/deployment.md`: version-tag CI/CD, GitHub environments and SSH,
+  production promotion, manual staging fallback, diagnostics, and recovery.
 
-Treat proposed designs as reference material, not evidence that a feature exists
-or an instruction to implement it as part of an unrelated task.
+Tags, catalogue filtering, and Cloudflare R2 image uploads are implemented.
+Use current source code for their behaviour; completed feature plans and generic
+reference notes have been removed from `docs/`.
 
 ## Scope and handoff
 
