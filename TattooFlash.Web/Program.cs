@@ -20,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseSentry(options =>
 {
     options.Dsn = builder.Configuration["Sentry:Dsn"];
-    options.Debug = true;
+    options.Debug = builder.Environment.IsDevelopment();
     options.EnableLogs = true;
     options.Environment = builder.Configuration["Sentry:Environment"];
 });
