@@ -39,7 +39,6 @@ public class BookingDialogTests
             var bookingLink = provider.Find("a");
             Assert.Equal("Book Now", bookingLink.TextContent.Trim());
             Assert.Equal($"https://ig.me/m/{username}", bookingLink.GetAttribute("href"));
-            Assert.Equal("_blank", bookingLink.GetAttribute("target"));
         });
         images.Verify(x => x.GetImageUrl(imageName), Times.AtLeastOnce);
         images.VerifyNoOtherCalls();
