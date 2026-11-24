@@ -38,7 +38,7 @@ public class BookingDialogTests
             Assert.Contains("Please include a screenshot of this design", provider.Markup);
             var bookingLink = provider.Find("a");
             Assert.Equal("Book Now", bookingLink.TextContent.Trim());
-            Assert.Equal($"https://instagram.com/m/{username}", bookingLink.GetAttribute("href"));
+            Assert.Equal($"https://instagram.com/{username}", bookingLink.GetAttribute("href"));
         });
         images.Verify(x => x.GetImageUrl(imageName), Times.AtLeastOnce);
         images.VerifyNoOtherCalls();
