@@ -19,7 +19,7 @@ namespace TattooFlash.Web.Components.Dialogs
         private string InstagramUserName => Configuration["Booking:InstagramUserName"]
             ?? throw new InvalidOperationException("Missing Booking:InstagramUserName configuration.");
 
-        private string InstagramLink => $"https://ig.me/m/{InstagramUserName}";
+        private string InstagramLink => $"https://instagram.com/m/{InstagramUserName}";
 
         [CascadingParameter]
         private IMudDialogInstance MudDialog { get; set; } = default!;
