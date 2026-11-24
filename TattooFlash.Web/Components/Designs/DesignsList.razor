@@ -9,9 +9,9 @@
         }
         else
         {
-
+       
             <MudItem xs="12" md="12">
-                <MudChipSet T="Guid" @bind-SelectedValue="_selectedTagId" CheckMark SelectionMode="SelectionMode.ToggleSelection" Class="mb-4" @bind-SelectedValue:after="OnFilterChanged">
+                <MudChipSet T="Guid" @bind-SelectedValue="_selectedTagId" CheckMark SelectionMode="SelectionMode.ToggleSelection" Class="mb-4 tag-filters" @bind-SelectedValue:after="OnFilterChanged">
                     <MudChip Value="@Guid.Empty">All</MudChip>
                     @foreach (var tag in _tags)
                     {
@@ -53,3 +53,16 @@
         }
     }
 </MudGrid>
+
+<style>
+
+    .tag-filters {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        display: flex;
+    }
+
+    .tag-filters .mud-chip {
+        flex-shrink: 0;
+    }
+</style>
